@@ -3,107 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>XE60C 點名系統</title>
+    <title>XE60C 點名系統 (可縮放修正版)</title>
     <style>
-        :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; }
+        :root { 
+            --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; 
+            --bg: #f8fafc; --seat-bg: #ffffff;
+        }
         
         body { 
-            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
-            background: var(--bg); margin: 0; padding: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg); margin: 0; padding: 10px; padding-bottom: 100px; 
             touch-action: manipulation; 
         }
 
-        .container { max-width: 1100px; margin: 0 auto; }
+        .container { max-width: 100%; margin: 0 auto; }
 
         header { text-align: center; margin-bottom: 15px; }
-        h1 { margin: 0; color: var(--primary); font-size: 1.4rem; }
+        h1 { margin: 0; color: var(--primary); font-size: 1.2rem; }
         
         .stats { 
-            display: flex; justify-content: center; align-items: center; gap: 15px; 
-            margin-bottom: 15px; background: white; padding: 10px; border-radius: 10px; 
-            font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            flex-wrap: wrap;
+            display: flex; justify-content: space-around; align-items: center; 
+            background: white; padding: 12px; border-radius: 12px; 
+            margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            font-size: 0.9rem;
         }
 
-        .subject-select { padding: 6px; border-radius: 6px; border: 1px solid #ccc; font-size: 0.9rem; }
+        .subject-select { 
+            padding: 8px; border-radius: 8px; border: 1px solid #ddd; 
+            background: #fff; font-size: 0.9rem; max-width: 120px;
+        }
 
-        /* 核心：包裹層允許橫向滑動 */
+        /* 修正2：保持原始排版不換行，並允許左右滑動 */
         .chart-wrapper {
-            overflow-x: auto; 
-            background: #ddd;
+            overflow-x: auto;
+            background: #e2e8f0;
             border-radius: 12px;
-            padding: 15px;
-            border: 1px solid #bbb;
+            padding: 10px;
         }
 
-        /* 核心：固定寬度的 Grid 排版 */
         .seating-chart { 
             display: grid; 
-            /* 固定寬度，確保 8 欄 3 走道不跑位 */
-            grid-template-columns: repeat(2, 100px) 30px repeat(2, 100px) 30px repeat(2, 100px) 30px repeat(2, 100px); 
-            gap: 10px; 
+            /* 固定寬度，確保 8 欄 + 3 走道結構不變形 */
+            grid-template-columns: 85px 85px 25px 85px 85px 25px 85px 85px 25px 85px 85px; 
+            gap: 6px; 
             width: max-content; 
             margin: 0 auto;
         }
 
-        .gap-column { background: transparent; pointer-events: none; }
+        .gap-column { background: transparent; }
 
         .seat { 
-            background: white; border: 1px solid #94a3b8; border-radius: 6px; 
+            background: var(--seat-bg); border: 1px solid #cbd5e1; border-radius: 6px; 
             padding: 8px 2px; text-align: center; min-height: 80px; 
-            cursor: pointer; display: flex; flex-direction: column; 
-            justify-content: center; transition: 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; justify-content: center;
+            transition: transform 0.1s, background-color 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* 座位內的文字排版：還原學號顯示 */
-        .seat-info { font-size: 0.65rem; color: #888; margin-bottom: 2px; }
-        .stu-id { font-size: 0.75rem; color: var(--primary); font-family: monospace; }
-        .name-ch { font-size: 1rem; font-weight: bold; color: #000; margin-top: 2px; }
+        .seat:active { transform: scale(0.95); }
 
-        .present { background-color: #e6fffa; border-color: var(--success); }
-        .absent { background-color: #fff5f5; border-color: var(--danger); }
-        .empty { background-color: #eee; border: 1px dashed #aaa; cursor: default; opacity: 0.6; }
+        .seat-info { font-size: 0.6rem; color: #94a3b8; margin-bottom: 2px; }
+        /* 修正3：加入學號後3碼的樣式 */
+        .stu-id { font-size: 0.75rem; color: var(--primary); font-family: monospace; }
+        .name-ch { font-size: 0.95rem; font-weight: bold; color: #1e293b; margin-top: 2px; }
+        
+        .present { background-color: #f0fdf4; border-color: #86efac; color: #166534; }
+        .absent { background-color: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+        .empty { background-color: #f1f5f9; border: 1px dashed #cbd5e1; opacity: 0.5; }
 
         .screen { 
-            width: 280px; margin: 20px auto; background: #333; color: white; 
-            text-align: center; padding: 10px; border-radius: 8px;
-            font-weight: bold; letter-spacing: 5px; font-size: 0.9rem;
+            width: 70%; margin: 20px auto; background: #334155; color: white; 
+            text-align: center; padding: 8px; border-radius: 8px;
+            font-size: 0.8rem; letter-spacing: 4px;
         }
 
-        .controls { 
-            margin-top: 20px; text-align: center; display: flex; gap: 10px; 
-            justify-content: center; padding-bottom: 40px;
+        .footer-controls {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; padding: 15px;
+            display: flex; gap: 10px;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
         }
 
-        button { padding: 12px 20px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; }
+        button { 
+            flex: 1; padding: 15px; border: none; border-radius: 10px; 
+            font-weight: bold; font-size: 1rem;
+        }
         .btn-copy { background: var(--primary); color: white; }
-        .btn-reset { background: #e2e8f0; color: #4a5568; }
+        .btn-reset { background: #f1f5f9; color: #64748b; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header><h1>XE60C 教室點名系統</h1></header>
+    <header><h1>XE60C 點名系統</h1></header>
     
     <div class="stats">
-        <div>科目: 
-            <select id="subject" class="subject-select">
-                <option value="早上8點">早上8點</option>
-                <option value="西班牙文">西班牙文</option>
-                <option value="音樂">音樂</option>
-                <option value="生物">生物</option>
-                <option value="電腦">電腦</option>
-                <option value="人格修養">人格修養</option>
-                <option value="現代文學">現代文學</option>
-                <option value="數學">數學</option>
-                <option value="none">不顯示科目</option>
-            </select>
-        </div>
-        <div>
-            <span style="color: var(--success);">出席: <span id="present-count">0</span></span>
-            <span style="margin-left:15px; color: var(--danger);">缺席: <span id="absent-count">0</span></span>
-        </div>
+        <select id="subject" class="subject-select">
+            <option value="早上8點">早上8點</option>
+            <option value="西班牙文">西班牙文</option>
+            <option value="音樂">音樂</option>
+            <option value="生物">生物</option>
+            <option value="電腦">電腦</option>
+            <option value="人格修養">人格修養</option>
+            <option value="現代文學">現代文學</option>
+            <option value="數學">數學</option>
+            <option value="none">不顯示科目</option>
+        </select>
+        <div style="color: var(--success);">出:<span id="present-count">0</span></div>
+        <div style="color: var(--danger);">缺:<span id="absent-count">0</span></div>
     </div>
 
     <div class="chart-wrapper">
@@ -111,16 +119,16 @@
     </div>
 
     <div class="screen">投 影 幕</div>
+</div>
 
-    <div class="controls">
-        <button class="btn-reset" onclick="reset()">全部重設</button>
-        <button class="btn-copy" onclick="exportResult()">複製缺席名單</button>
-    </div>
+<div class="footer-controls">
+    <button class="btn-reset" onclick="reset()">重設</button>
+    <button class="btn-copy" onclick="exportResult()">複製缺席名單</button>
 </div>
 
 <script>
     const rawData = [
-        {pos:"1-7", id:"1114300146", ch:"李婕禕"}, {pos:"2-7", id:"1114300501", ch:"賈伯珍"}, {pos:"3-7", id:"1114300174", ch:"蔡悅琳"}, {pos:"4-7", id:"1114300137", ch:"賴瑾安"}, {pos:"5-7", id:"1114300154", ch:"張鈺婕"}, {pos:"6-7", id:"1114300165", ch:"趙于嫻"}, {pos:"7-7", id:"1114300141", ch:"林紫騏"}, {pos:"8-7", id:"1114300173", ch:"黃毓霏"},
+        {pos:"1-7", id:"1114300146", ch:"李婕禕"}, {pos:"2-7", id:"1114300501", ch:"賈伯珍"}, {pos:"3-7", id:"1114300174", ch:"蔡悅琳"}, {pos:"4-7", id:"1114300137", ch:"賴瑾安"}, {pos:"5-7", id:"1114300154", ch:"張鈺婕"}, {pos:"6-7", id:"1114300165", ch:"趙于嫻"}, {pos:"7-7", id:"1114300141", ch:"林紫騏"}, {pos:"8-7", id:"1114300173",黄:"黃毓霏"},
         {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾"},
         {pos:"1-5", id:"1114300171", ch:"張湘翊"}, {pos:"2-5", id:"1114300160", ch:"陳漢庭"}, {pos:"3-5", id:"1114300159", ch:"陳冠宇"}, {pos:"4-5", id:"1114300123", ch:"陳湘甯"}, {pos:"5-5", id:"1114300131", ch:"陳又瑄"}, {pos:"6-5", id:"1114300170", ch:"張子瑜"}, {pos:"7-5", id:"1114300121", ch:"龔昱瑄"}, {pos:"8-5", id:"1114300151", ch:"張雅玟"},
         {pos:"1-4", id:"1114300153", ch:"陳以婕"}, {pos:"2-4", id:"1114300167", ch:"柯品瑀"}, {pos:"3-4", id:"1114300158", ch:"陳琦涵"}, {pos:"4-4", id:"1114300147", ch:"李恩妮"}, {pos:"5-4", id:"1114300129", ch:"陳靜宜"}, {pos:"6-4", id:"1114300148", ch:"林金姵"}, {pos:"7-4", id:"1114300127", ch:"陳乙瑄"}, {pos:"8-4", id:"1114300143", ch:"許唯芯"},
@@ -130,9 +138,9 @@
     ];
 
     let attendance = {};
+    const grid = document.getElementById('seating-grid');
 
     function init() {
-        const grid = document.getElementById('seating-grid');
         grid.innerHTML = '';
         for (let row = 0; row < 7; row++) {
             const rowDataSlice = rawData.slice(row * 8, (row + 1) * 8);
@@ -140,12 +148,12 @@
                 const seat = document.createElement('div');
                 if (s.id === 'empty') {
                     seat.className = 'seat empty';
-                    seat.innerHTML = `<span class="name-ch">空位</span>`;
+                    seat.innerHTML = `<span class="name-ch">空</span>`;
                 } else {
                     attendance[s.id] = true;
                     seat.className = 'seat present';
                     seat.id = `seat-${s.id}`;
-                    // 顯示：座標、學號後三碼、中文名
+                    // 修正：顯示學號後三碼 + 姓名
                     const lastThree = s.id.slice(-3);
                     seat.innerHTML = `
                         <span class="seat-info">${s.pos}</span>
@@ -185,11 +193,11 @@
         const subjectText = (subject === 'none') ? "" : ` ${subject}`;
         const absentList = rawData
             .filter(s => s.id !== 'empty' && !attendance[s.id])
-            .map(s => `${s.id.slice(-3)} ${s.ch}`);
+            .map(s => `${s.id.toString().slice(-3)} ${s.ch}`);
         const dateStr = new Date().toLocaleDateString();
-        const text = `XE60C${subjectText} 點名紀錄\n日期: ${dateStr}\n缺席: ${absentList.length > 0 ? absentList.join(', ') : '全員出席'}`;
+        const text = `XE60C${subjectText} 點名\n日期: ${dateStr}\n缺席: ${absentList.length > 0 ? absentList.join(', ') : '全員出席'}`;
         navigator.clipboard.writeText(text);
-        alert('名單已複製到剪貼簿！');
+        alert('名單已複製！');
     }
 
     init();
