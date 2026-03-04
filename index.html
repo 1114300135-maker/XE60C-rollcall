@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XE60C 課堂點名系統</title>
+    <style>
+        :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --bg: #f8f9fa; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); padding: 20px; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        header { text-align: center; border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }
+        h1 { color: var(--primary); margin: 0; font-size: 1.8rem; }
+        .class-code { color: #7f8c8d; font-size: 0.9rem; margin-top: 5px; }
+        
+        .stats { display: flex; justify-content: space-around; background: #fdfdfd; border: 1px solid #eee; padding: 15px; border-radius: 10px; margin-bottom: 25px; }
+        .stat-item { text-align: center; }
+        .stat-num { display: block; font-size: 1.5rem; font-weight: bold; }
+        
+        .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+        .student-card { border: 2px solid #edf2f7; padding: 12px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; text-align: center; background: #fff; position: relative; }
+        .student-card:hover { border-color: #3498db; transform: translateY(-3px); }
+        
+        /* 狀態顏色 */
+        .present { border-color: var(--success) !important; background-color: #f0fff4; color: #22543d; }
+        .present::after { content: "✓"; position: absolute; top: 5px; right: 8px; font-weight: bold; color: var(--success); }
+        .absent { border-color: var(--danger) !important; background-color: #fff5f5; color: #822727; }
+        .absent::after { content: "✕"; position: absolute; top: 5px; right: 8px; font-weight: bold; color: var(--danger); }
+        
+        .name-ch { font-size: 1.1rem; font-weight: 600; display: block; }
+        .name-en { font-size: 0.85rem; color: #718096; }
+        .id-tail { font-size: 0.75rem; color: #a0aec0; display: block; margin-top: 4px; }
+        
+        .controls { margin-top: 40px; text-align: center; display: flex; gap: 10px; justify-content: center; }
+        button { padding: 12px 24px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .btn-copy { background: var(--primary); color: white; }
+        .btn-reset { background: #e2e8f0; color: #4a5568; }
+        button:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>XE60C 課堂點名</h1>
+        <div class="class-code">Student Attendance System</div>
+    </header>
+    
+    <div class="stats">
+        <div class="stat-item">總人數<span id="total-count" class="stat-num">0</span></div>
+        <div class="stat-item" style="color: var(--success);">出席<span id="present-count" class="stat-num">0</span></div>
+        <div class="stat-item" style="color: var(--danger);">缺席<span id="absent-count" class="stat-num">0</span></div>
+    </div>
+
+    <div id="student-grid" class="student-grid"></div>
+
+    <div class="controls">
+        <button class="btn-copy" onclick="exportResult()">複製缺席名單</button>
+        <button class="btn-reset" onclick="resetAttendance()">重設全部出席</button>
+    </div>
+</div>
+
+<script>
+    const students = [
+        {id: "1114300121", ch: "龔昱瑄", en: "Kelly"}, {id: "1114300122", ch: "余沛容", en: "Melody"},
+        {id: "1114300123", ch: "陳湘甯", en: "Ariel"}, {id: "1114300124", ch: "林沁榆", en: "Amber"},
+        {id: "1114300126", ch: "林奕帆", en: "Ivan"}, {id: "1114300127", ch: "陳乙瑄", en: "Sharon"},
+        {id: "1114300128", ch: "王漆妤", en: "Zoie"}, {id: "1114300129", ch: "陳靜宜", en: "Luna"},
+        {id: "1114300130", ch: "陳祉恩", en: "Bianca"}, {id: "1114300131", ch: "陳又瑄", en: "Christy"},
+        {id: "1114300132", ch: "賴宥璇", en: "Alina"}, {id: "1114300133", ch: "陳玟慈", en: "Emily"},
+        {id: "1114300134", ch: "江芯語", en: "Ina"}, {id: "1114300135", ch: "陳世豪", en: "Howard"},
+        {id: "1114300136", ch: "曾安岑", en: "Ann"}, {id: "1114300137", ch: "賴瑾安", en: "Ashley"},
+        {id: "1114300138", ch: "羅凱爾", en: "Mikayeel"}, {id: "1114300139", ch: "辛俊文", en: "Jun-wen"},
+        {id: "1114300140", ch: "黃靖晏", en: "Amber"}, {id: "1114300141", ch: "林紫騏", en: "Nancy"},
+        {id: "1114300142", ch: "吳霈瑜", en: "Yuri"}, {id: "1114300143", ch: "許唯芯", en: "Una"},
+        {id: "1114300144", ch: "游芯語", en: "Abby"}, {id: "1114300145", ch: "李易昌", en: "Jason"},
+        {id: "1114300146", ch: "李婕禕", en: "Eve"}, {id: "1114300147", ch: "李恩妮", en: "Miu Miu"},
+        {id: "1114300148", ch: "林金姵", en: "Linda"}, {id: "1114300149", ch: "陳可紜", en: "Amber"},
+        {id: "1114300151", ch: "張雅玟", en: "Judy"}, {id: "1114300152", ch: "牛昱翔", en: "Sean"},
+        {id: "1114300153", ch: "陳以婕", en: "Emma"}, {id: "1114300154", ch: "張鈺婕", en: "Wendy"},
+        {id: "1114300155", ch: "朱雯芳", en: "Mia"}, {id: "1114300156", ch: "連子甯", en: "Liliya"},
+        {id: "1114300157", ch: "楊芷芹", en: "Alex"}, {id: "1114300158", ch: "陳琦涵", en: "Hannah"},
+        {id: "1114300159", ch: "陳冠宇", en: "Benson"}, {id: "1114300160", ch: "陳漢庭", en: "Lina"},
+        {id: "1114300161", ch: "張乙芹", en: "Irene"}, {id: "1114300162", ch: "王妍菻", en: "Grace"},
+        {id: "1114300163", ch: "曲孝寬", en: "Miller"}, {id: "1114300164", ch: "王以倫", en: "Juan Jose"},
+        {id: "1114300165", ch: "趙于嫻", en: "Abby"}, {id: "1114300166", ch: "林宜樺", en: "Novalie"},
+        {id: "1114300167", ch: "柯品瑀", en: "Pamela"}, {id: "1114300168", ch: "卓彥均", en: "Cynthia"},
+        {id: "1114300169", ch: "遊梁健雅", en: "Luna"}, {id: "1114300170", ch: "張子瑜", en: "Yvonne"},
+        {id: "1114300171", ch: "張湘翊", en: "Cecelia"}, {id: "1114300172", ch: "廖靚薇", en: "Nicole"},
+        {id: "1114300173", ch: "黃毓霏", en: "Lily"}, {id: "1114300174", ch: "蔡悅琳", en: "Lina"},
+        {id: "1114300175", ch: "陳宥卉", en: "Iris"}, {id: "1114300501", ch: "賈伯珍", en: "Haein"},
+        {id: "1114300502", ch: "鄭皓軒", en: "Suppakarn"}
+    ];
+
+    let attendance = {};
+
+    function init() {
+        const grid = document.getElementById('student-grid');
+        grid.innerHTML = '';
+        document.getElementById('total-count').innerText = students.length;
+        
+        students.forEach(s => {
+            attendance[s.id] = true;
+            const card = document.createElement('div');
+            card.className = 'student-card present';
+            card.id = `card-${s.id}`;
+            card.innerHTML = `
+                <span class="name-ch">${s.ch}</span>
+                <span class="name-en">${s.en}</span>
+                <span class="id-tail">...${s.id.slice(-3)}</span>
+            `;
+            card.onclick = () => toggle(s.id);
+            grid.appendChild(card);
+        });
+        updateStats();
+    }
+
+    function toggle(id) {
+        attendance[id] = !attendance[id];
+        const card = document.getElementById(`card-${id}`);
+        card.className = `student-card ${attendance[id] ? 'present' : 'absent'}`;
+        updateStats();
+    }
+
+    function updateStats() {
+        const present = Object.values(attendance).filter(v => v).length;
+        document.getElementById('present-count').innerText = present;
+        document.getElementById('absent-count').innerText = students.length - present;
+    }
+
+    function resetAttendance() {
+        if(confirm('確定要將所有人重設為出席嗎？')) {
+            init();
+        }
+    }
+
+    function exportResult() {
+        const absentList = students.filter(s => !attendance[s.id]).map(s => `${s.ch}(${s.id.slice(-3)})`);
+        const now = new Date();
+        const timeStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} XE60C 點名結果`;
+        const result = `${timeStr}\n缺席者：${absentList.length > 0 ? absentList.join(', ') : '全員出席'}`;
+        
+        navigator.clipboard.writeText(result).then(() => {
+            alert('名單已複製！\n' + result);
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
