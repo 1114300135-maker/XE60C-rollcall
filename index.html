@@ -3,100 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XE60C 手機點名版</title>
+    <title>XE60C 精簡點名版</title>
     <style>
         :root { 
             --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; 
-            --bg: #f8fafc; --seat-bg: #ffffff;
+            --bg: #f1f5f9;
         }
         
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: var(--bg); margin: 0; padding: 10px; padding-bottom: 100px; /* 留空間給底部按鈕 */
-            touch-action: manipulation; /* 優化觸控延遲 */
+            font-family: -apple-system, system-ui, sans-serif; 
+            background: var(--bg); margin: 0; padding: 10px;
+            overflow-x: hidden; /* 徹底禁止左右捲動 */
+            touch-action: manipulation;
         }
 
-        .container { max-width: 100%; margin: 0 auto; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; }
 
-        header { text-align: center; margin-bottom: 15px; }
-        h1 { margin: 0; color: var(--primary); font-size: 1.2rem; }
+        header h1 { font-size: 1.1rem; text-align: center; margin: 5px 0 15px; color: var(--primary); }
         
-        /* 狀態列優化 */
         .stats { 
-            display: flex; justify-content: space-around; align-items: center; 
-            background: white; padding: 12px; border-radius: 12px; 
-            margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            font-size: 0.9rem;
+            display: flex; justify-content: space-between; align-items: center; 
+            background: white; padding: 10px; border-radius: 10px; 
+            margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-size: 0.85rem; font-weight: bold;
         }
 
-        .subject-select { 
-            padding: 8px; border-radius: 8px; border: 1px solid #ddd; 
-            background: #fff; font-size: 0.9rem; max-width: 120px;
-        }
+        .subject-select { padding: 5px; border-radius: 5px; border: 1px solid #ccc; font-size: 0.8rem; }
 
-        /* 座位網格優化：手機上間隔縮小 */
+        /* 核心優化：使用百分比分配，確保不捲動 */
         .seating-chart { 
             display: grid; 
-            grid-template-columns: 1fr 1fr 10px 1fr 1fr 10px 1fr 1fr 10px 1fr 1fr; 
-            gap: 6px; 
-            padding: 10px;
-            background: #e2e8f0;
-            border-radius: 12px;
-            overflow-x: auto; /* 手機過窄時仍可滑動 */
+            /* 8個座位(1份) + 3個走道(0.4份) */
+            grid-template-columns: 1fr 1fr 0.4fr 1fr 1fr 0.4fr 1fr 1fr 0.4fr 1fr 1fr; 
+            gap: 4px; 
+            padding: 8px;
+            background: #cbd5e1;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .gap-column { background: transparent; }
 
         .seat { 
-            background: var(--seat-bg); border: 1px solid #cbd5e1; border-radius: 6px; 
-            padding: 12px 2px; text-align: center; min-height: 85px; 
-            display: flex; flex-direction: column; justify-content: center;
-            transition: transform 0.1s, background-color 0.2s;
-            -webkit-tap-highlight-color: transparent;
+            background: white; border: 1px solid #94a3b8; border-radius: 4px; 
+            aspect-ratio: 1 / 1.3; /* 關鍵：讓座位高度隨寬度自動縮放 */
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: 0.1s;
         }
 
-        .seat:active { transform: scale(0.95); } /* 點擊反饋 */
+        /* 點擊時的視覺回饋 */
+        .seat:active { opacity: 0.7; transform: scale(0.92); }
 
-        .seat-info { font-size: 0.6rem; color: #94a3b8; margin-bottom: 4px; }
-        .name-ch { font-size: 0.9rem; font-weight: bold; color: #1e293b; }
-        
-        .present { background-color: #f0fdf4; border-color: #86efac; color: #166534; }
-        .absent { background-color: #fef2f2; border-color: #fca5a5; color: #991b1b; }
-        .empty { background-color: #f1f5f9; border: 1px dashed #cbd5e1; opacity: 0.5; }
+        .seat-info { font-size: 0.5rem; color: #94a3b8; transform: scale(0.8); }
+        .name-ch { 
+            font-size: 0.75rem; /* 預設字體大小 */
+            font-weight: bold; 
+            line-height: 1.1;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .present { background-color: #ecfdf5; border-color: var(--success); color: #065f46; }
+        .absent { background-color: #fef2f2; border-color: var(--danger); color: #991b1b; }
+        .empty { background-color: #e2e8f0; border: 1px dashed #94a3b8; opacity: 0.4; }
 
         .screen { 
-            width: 70%; margin: 20px auto; background: #334155; color: white; 
-            text-align: center; padding: 8px; border-radius: 8px;
-            font-size: 0.8rem; letter-spacing: 4px;
+            width: 60%; margin: 15px auto; background: #475569; color: white; 
+            text-align: center; padding: 6px; border-radius: 5px;
+            font-size: 0.7rem; letter-spacing: 5px;
         }
 
-        /* 底部操作區：固定在手機下方方便單手操作 */
-        .footer-controls {
+        /* 底部按鈕優化 */
+        .footer {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; padding: 15px;
-            display: flex; gap: 10px;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-            z-index: 100;
+            background: white; padding: 12px;
+            display: flex; gap: 8px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
         }
 
         button { 
-            flex: 1; padding: 15px; border: none; border-radius: 10px; 
-            font-weight: bold; font-size: 1rem;
+            flex: 1; padding: 12px; border: none; border-radius: 8px; 
+            font-weight: bold; font-size: 0.95rem;
         }
         .btn-copy { background: var(--primary); color: white; }
-        .btn-reset { background: #f1f5f9; color: #64748b; }
+        .btn-reset { background: #f1f5f9; color: #475569; }
 
-        /* 針對超窄螢幕調整 */
-        @media (max-width: 400px) {
-            .seating-chart { grid-template-columns: repeat(11, 45px); }
-            .name-ch { font-size: 0.8rem; }
+        /* 超窄螢幕適應 (例如 iPhone SE) */
+        @media (max-width: 350px) {
+            .name-ch { font-size: 0.65rem; }
+            .seating-chart { gap: 2px; padding: 5px; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header><h1>XE60C 點名系統</h1></header>
+    <header><h1>XE60C 點名 (投影幕在下)</h1></header>
     
     <div class="stats">
         <select id="subject" class="subject-select">
@@ -110,18 +113,20 @@
             <option value="數學">數學</option>
             <option value="none">不顯示科目</option>
         </select>
-        <div style="color: var(--success);">出:<span id="present-count">0</span></div>
-        <div style="color: var(--danger);">缺:<span id="absent-count">0</span></div>
+        <div style="color: var(--success);">出: <span id="present-count">0</span></div>
+        <div style="color: var(--danger);">缺: <span id="absent-count">0</span></div>
     </div>
 
     <div id="seating-grid" class="seating-chart"></div>
 
-    <div class="screen">投 影 幕</div>
+    <div class="screen">投影幕在此方向</div>
+    
+    <div style="height: 80px;"></div>
 </div>
 
-<div class="footer-controls">
+<div class="footer">
     <button class="btn-reset" onclick="reset()">重設</button>
-    <button class="btn-copy" onclick="exportResult()">複製缺席名單</button>
+    <button class="btn-copy" onclick="exportResult()">複製名單</button>
 </div>
 
 <script>
@@ -132,13 +137,13 @@
         {pos:"1-4", id:"1114300153", ch:"陳以婕"}, {pos:"2-4", id:"1114300167", ch:"柯品瑀"}, {pos:"3-4", id:"1114300158", ch:"陳琦涵"}, {pos:"4-4", id:"1114300147", ch:"李恩妮"}, {pos:"5-4", id:"1114300129", ch:"陳靜宜"}, {pos:"6-4", id:"1114300148", ch:"林金姵"}, {pos:"7-4", id:"1114300127", ch:"陳乙瑄"}, {pos:"8-4", id:"1114300143", ch:"許唯芯"},
         {pos:"1-3", id:"1114300161", ch:"張乙芹"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇"}, {pos:"4-3", id:"1114300139", ch:"辛俊文"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜"}, {pos:"8-3", id:"1114300172", ch:"廖靚薇"},
         {pos:"1-2", id:"1114300128", ch:"王漆妤"}, {pos:"2-2", id:"1114300134", ch:"江芯語"}, {pos:"3-2", id:"1114300502", ch:"鄭皓軒"}, {pos:"4-2", id:"1114300156", ch:"連子甯"}, {pos:"5-2", id:"1114300126", ch:"林奕帆"}, {pos:"6-2", id:"1114300152", ch:"牛昱翔"}, {pos:"7-2", id:"1114300135", ch:"陳世豪"}, {pos:"8-2", id:"1114300166", ch:"林宜樺"},
-        {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", ch:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空位)"}
+        {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", ch:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空)"}
     ];
 
     let attendance = {};
-    const grid = document.getElementById('seating-grid');
 
     function init() {
+        const grid = document.getElementById('seating-grid');
         grid.innerHTML = '';
         for (let row = 0; row < 7; row++) {
             const rowDataSlice = rawData.slice(row * 8, (row + 1) * 8);
@@ -146,7 +151,7 @@
                 const seat = document.createElement('div');
                 if (s.id === 'empty') {
                     seat.className = 'seat empty';
-                    seat.innerHTML = `<span class="seat-info">${s.pos}</span><span class="name-ch">空</span>`;
+                    seat.innerHTML = `<span class="name-ch" style="color:#94a3b8">空</span>`;
                 } else {
                     attendance[s.id] = true;
                     seat.className = 'seat present';
@@ -187,7 +192,7 @@
             .filter(s => s.id !== 'empty' && !attendance[s.id])
             .map(s => `${s.id.toString().slice(-3)} ${s.ch}`);
         const dateStr = new Date().toLocaleDateString();
-        const text = `XE60C${subjectText} 點名\n日期: ${dateStr}\n缺席: ${absentList.length > 0 ? absentList.join(', ') : '全員出席'}`;
+        const text = `XE60C${subjectText} 點名紀錄\n日期: ${dateStr}\n缺席: ${absentList.length > 0 ? absentList.join(', ') : '全員出席'}`;
         navigator.clipboard.writeText(text);
         alert('名單已複製！');
     }
