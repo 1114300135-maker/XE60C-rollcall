@@ -3,44 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>XE60C 點名系統 (可縮放版)</title>
+    <title>XE60C 點名系統</title>
     <style>
         :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; }
         
         body { 
             font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
-            background: var(--bg); margin: 0; padding: 15px;
-            /* 防止快速點擊時觸發瀏覽器的默認雙擊放大，但不影響手動縮放 */
+            background: var(--bg); margin: 0; padding: 10px;
             touch-action: manipulation; 
         }
 
-        .container { max-width: 1000px; margin: 0 auto; }
+        .container { max-width: 1100px; margin: 0 auto; }
 
         header { text-align: center; margin-bottom: 15px; }
-        h1 { margin: 0; color: var(--primary); font-size: 1.5rem; }
+        h1 { margin: 0; color: var(--primary); font-size: 1.4rem; }
         
         .stats { 
-            display: flex; justify-content: center; align-items: center; gap: 20px; 
-            margin-bottom: 20px; background: white; padding: 12px; border-radius: 12px; 
+            display: flex; justify-content: center; align-items: center; gap: 15px; 
+            margin-bottom: 15px; background: white; padding: 10px; border-radius: 10px; 
             font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
         }
 
-        .subject-select { padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; }
+        .subject-select { padding: 6px; border-radius: 6px; border: 1px solid #ccc; font-size: 0.9rem; }
 
-        /* 座位表容器：設定最小寬度以保持 8 欄排版不跑掉 */
+        /* 核心：包裹層允許橫向滑動 */
         .chart-wrapper {
-            overflow-x: auto; /* 允許左右滑動 */
+            overflow-x: auto; 
             background: #ddd;
             border-radius: 12px;
             padding: 15px;
+            border: 1px solid #bbb;
         }
 
+        /* 核心：固定寬度的 Grid 排版 */
         .seating-chart { 
             display: grid; 
-            /* 保持 8 欄 + 3 走道的原始比例，固定最小寬度確保不擠壓 */
-            grid-template-columns: repeat(2, 90px) 30px repeat(2, 90px) 30px repeat(2, 90px) 30px repeat(2, 90px); 
-            gap: 8px; 
-            width: max-content; /* 根據內容決定寬度，不強迫壓縮 */
+            /* 固定寬度，確保 8 欄 3 走道不跑位 */
+            grid-template-columns: repeat(2, 100px) 30px repeat(2, 100px) 30px repeat(2, 100px) 30px repeat(2, 100px); 
+            gap: 10px; 
+            width: max-content; 
             margin: 0 auto;
         }
 
@@ -48,45 +50,41 @@
 
         .seat { 
             background: white; border: 1px solid #94a3b8; border-radius: 6px; 
-            padding: 10px 2px; text-align: center; min-height: 75px; 
+            padding: 8px 2px; text-align: center; min-height: 80px; 
             cursor: pointer; display: flex; flex-direction: column; 
             justify-content: center; transition: 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        .seat-info { font-size: 0.65rem; color: #888; margin-bottom: 4px; }
-        .name-ch { font-size: 0.95rem; font-weight: bold; color: #2d3748; }
+        /* 座位內的文字排版：還原學號顯示 */
+        .seat-info { font-size: 0.65rem; color: #888; margin-bottom: 2px; }
+        .stu-id { font-size: 0.75rem; color: var(--primary); font-family: monospace; }
+        .name-ch { font-size: 1rem; font-weight: bold; color: #000; margin-top: 2px; }
 
-        .present { background-color: #e6fffa; border-color: var(--success); color: #234e52; }
-        .absent { background-color: #fff5f5; border-color: var(--danger); color: #822727; }
+        .present { background-color: #e6fffa; border-color: var(--success); }
+        .absent { background-color: #fff5f5; border-color: var(--danger); }
         .empty { background-color: #eee; border: 1px dashed #aaa; cursor: default; opacity: 0.6; }
 
         .screen { 
-            width: 300px; margin: 25px auto; background: #333; color: white; 
+            width: 280px; margin: 20px auto; background: #333; color: white; 
             text-align: center; padding: 10px; border-radius: 8px;
-            font-weight: bold; letter-spacing: 5px;
+            font-weight: bold; letter-spacing: 5px; font-size: 0.9rem;
         }
 
         .controls { 
-            margin-top: 25px; text-align: center; display: flex; gap: 15px; 
-            justify-content: center; padding-bottom: 30px;
+            margin-top: 20px; text-align: center; display: flex; gap: 10px; 
+            justify-content: center; padding-bottom: 40px;
         }
 
-        button { padding: 15px 25px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; }
-        .btn-copy { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        button { padding: 12px 20px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; }
+        .btn-copy { background: var(--primary); color: white; }
         .btn-reset { background: #e2e8f0; color: #4a5568; }
-
-        /* 針對小螢幕的手機導引提示 */
-        @media (max-width: 600px) {
-            h1 { font-size: 1.2rem; }
-            .stats { flex-direction: column; gap: 10px; }
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header><h1>XE60C 教室座位點名</h1></header>
+    <header><h1>XE60C 教室點名系統</h1></header>
     
     <div class="stats">
         <div>科目: 
@@ -128,7 +126,7 @@
         {pos:"1-4", id:"1114300153", ch:"陳以婕"}, {pos:"2-4", id:"1114300167", ch:"柯品瑀"}, {pos:"3-4", id:"1114300158", ch:"陳琦涵"}, {pos:"4-4", id:"1114300147", ch:"李恩妮"}, {pos:"5-4", id:"1114300129", ch:"陳靜宜"}, {pos:"6-4", id:"1114300148", ch:"林金姵"}, {pos:"7-4", id:"1114300127", ch:"陳乙瑄"}, {pos:"8-4", id:"1114300143", ch:"許唯芯"},
         {pos:"1-3", id:"1114300161", ch:"張乙芹"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇"}, {pos:"4-3", id:"1114300139", ch:"辛俊文"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜"}, {pos:"8-3", id:"1114300172", ch:"廖靚薇"},
         {pos:"1-2", id:"1114300128", ch:"王漆妤"}, {pos:"2-2", id:"1114300134", ch:"江芯語"}, {pos:"3-2", id:"1114300502", ch:"鄭皓軒"}, {pos:"4-2", id:"1114300156", ch:"連子甯"}, {pos:"5-2", id:"1114300126", ch:"林奕帆"}, {pos:"6-2", id:"1114300152", ch:"牛昱翔"}, {pos:"7-2", id:"1114300135", ch:"陳世豪"}, {pos:"8-2", id:"1114300166", ch:"林宜樺"},
-        {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", ch:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空)"}
+        {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", ch:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空位)"}
     ];
 
     let attendance = {};
@@ -147,7 +145,13 @@
                     attendance[s.id] = true;
                     seat.className = 'seat present';
                     seat.id = `seat-${s.id}`;
-                    seat.innerHTML = `<span class="seat-info">${s.pos}</span><span class="name-ch">${s.ch}</span>`;
+                    // 顯示：座標、學號後三碼、中文名
+                    const lastThree = s.id.slice(-3);
+                    seat.innerHTML = `
+                        <span class="seat-info">${s.pos}</span>
+                        <span class="stu-id">${lastThree}</span>
+                        <span class="name-ch">${s.ch}</span>
+                    `;
                     seat.onclick = () => toggle(s.id);
                 }
                 grid.appendChild(seat);
@@ -174,18 +178,18 @@
         document.getElementById('absent-count').innerText = total - present;
     }
 
-    function reset() { if(confirm('重設所有點名狀態？')) init(); }
+    function reset() { if(confirm('重設所有狀態？')) init(); }
 
     function exportResult() {
         const subject = document.getElementById('subject').value;
         const subjectText = (subject === 'none') ? "" : ` ${subject}`;
         const absentList = rawData
             .filter(s => s.id !== 'empty' && !attendance[s.id])
-            .map(s => `${s.id.toString().slice(-3)} ${s.ch}`);
+            .map(s => `${s.id.slice(-3)} ${s.ch}`);
         const dateStr = new Date().toLocaleDateString();
         const text = `XE60C${subjectText} 點名紀錄\n日期: ${dateStr}\n缺席: ${absentList.length > 0 ? absentList.join(', ') : '全員出席'}`;
         navigator.clipboard.writeText(text);
-        alert('名單已複製！');
+        alert('名單已複製到剪貼簿！');
     }
 
     init();
