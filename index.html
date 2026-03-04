@@ -2,77 +2,87 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XE60C 點名系統</title>
+    <meta name="viewport" content="width=1024, user-scalable=yes">
+    <title>XE60C 點名系統 (電腦版原始排版)</title>
     <style>
         :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; }
         
         body { 
             font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
-            background: var(--bg); margin: 0; padding: 10px; 
-            /* 修正 2: 禁止 Body 產生左右捲軸，確保排版貼合螢幕 */
-            overflow-x: hidden; 
-            touch-action: manipulation;
+            background: var(--bg); 
+            margin: 0; 
+            padding: 20px; 
+            /* 確保內容不會因為手機螢幕窄就縮在一起 */
+            min-width: 1000px; 
         }
 
-        .container { width: 100%; max-width: 1200px; margin: 0 auto; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
-        
-        header { text-align: center; margin-bottom: 15px; }
-        h1 { margin: 0; color: var(--primary); font-size: 1.2rem; }
-        
-        .stats { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; }
-        .subject-select { padding: 5px; border-radius: 5px; border: 1px solid #ccc; font-size: 0.9rem; }
+        /* 固定寬度，不隨螢幕大小變動 */
+        .container { 
+            width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        }
 
-        /* 修正 3: 排版核心 - 使用 fr 單位讓 11 欄平分寬度，不產生捲動 */
+        header { text-align: center; margin-bottom: 20px; }
+        h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
+        
+        .stats { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 30px; 
+            margin-bottom: 20px; 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+        }
+
+        .subject-select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 1rem; }
+
+        /* 固定每格寬度，維持原始 8 欄排版 */
         .seating-chart { 
             display: grid; 
-            /* 8 欄座位 (1fr) + 3 欄走道 (0.3fr) */
-            grid-template-columns: 1fr 1fr 0.3fr 1fr 1fr 0.3fr 1fr 1fr 0.3fr 1fr 1fr; 
-            gap: 4px; 
-            padding: 8px;
+            grid-template-columns: repeat(2, 100px) 35px repeat(2, 100px) 35px repeat(2, 100px) 35px repeat(2, 100px); 
+            gap: 10px; 
+            padding: 20px;
             background: #ddd;
             border-radius: 8px;
-            width: 100%;
-            box-sizing: border-box;
+            justify-content: center;
         }
 
         .gap-column { background: transparent; pointer-events: none; }
 
         .seat { 
             background: white; border: 1px solid #ccc; border-radius: 4px; 
-            padding: 6px 0; text-align: center; 
-            /* 修正 4: 使用 aspect-ratio 保持格子比例，避免在不同手機上變形 */
-            aspect-ratio: 1 / 1.5;
+            padding: 10px 2px; text-align: center; min-height: 80px; 
             cursor: pointer; display: flex; flex-direction: column; 
-            justify-content: center; transition: 0.1s;
-            -webkit-tap-highlight-color: transparent;
+            justify-content: center; transition: 0.2s;
         }
 
-        /* 保持原本的姓名排版 */
-        .seat-info { font-size: 0.5rem; color: #888; transform: scale(0.85); margin-bottom: 2px; }
-        .stu-id { font-size: 0.7rem; color: #2c3e50; font-family: monospace; font-weight: bold; }
-        .name-ch { font-size: 0.85rem; font-weight: bold; line-height: 1.2; }
-        .name-en { font-size: 0.65rem; color: #555; transform: scale(0.9); }
+        .seat-info { font-size: 0.65rem; color: #888; margin-bottom: 3px; }
+        .stu-id { font-size: 0.75rem; color: #2c3e50; font-family: monospace; font-weight: bold; }
+        .name-ch { font-size: 1rem; font-weight: bold; }
+        .name-en { font-size: 0.8rem; color: #555; }
 
         .present { background-color: #e6fffa; border-color: var(--success); color: #234e52; }
         .absent { background-color: #fff5f5; border-color: var(--danger); color: #822727; }
-        .empty { background-color: #eee; border: 1px dashed #aaa; cursor: default; opacity: 0.6; }
+        .empty { background-color: #eee; border: 1px dashed #aaa; cursor: default; }
 
         .screen { 
-            width: 60%; margin: 15px auto; background: #333; color: white; 
-            text-align: center; padding: 8px; border-radius: 8px;
-            font-weight: bold; font-size: 0.8rem; letter-spacing: 3px;
+            width: 400px; margin: 30px auto 0 auto; background: #333; color: white; 
+            text-align: center; padding: 15px; border-radius: 10px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2); font-weight: bold; font-size: 1.2rem;
+            letter-spacing: 5px;
         }
 
-        .controls { margin-top: 20px; text-align: center; display: flex; gap: 8px; justify-content: center; }
-        button { flex: 1; max-width: 150px; padding: 12px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; font-size: 0.9rem; }
+        .controls { margin-top: 30px; text-align: center; display: flex; gap: 15px; justify-content: center; }
+        button { padding: 12px 25px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; }
         .btn-copy { background: var(--primary); color: white; }
         .btn-reset { background: #e2e8f0; }
-
-        /* 當手機雙指放大時，確保文字依然清晰 */
-        @media (max-width: 500px) {
-            .name-ch { font-size: 0.75rem; }
-        }
     </style>
 </head>
 <body>
@@ -94,7 +104,8 @@
                 <option value="none">不顯示科目</option>
             </select>
         </div>
-        <div>出: <span id="present-count" style="color: var(--success);">0</span> | 缺: <span id="absent-count" style="color: var(--danger);">0</span></div>
+        <div style="color: var(--success);">出席: <span id="present-count">0</span></div>
+        <div style="color: var(--danger);">缺席: <span id="absent-count">0</span></div>
     </div>
 
     <div id="seating-grid" class="seating-chart"></div>
@@ -102,7 +113,7 @@
     <div class="screen">投 影 幕</div>
 
     <div class="controls">
-        <button class="btn-copy" onclick="exportResult()">複製名單</button>
+        <button class="btn-copy" onclick="exportResult()">複製缺席名單</button>
         <button class="btn-reset" onclick="reset()">全部重設</button>
     </div>
 </div>
@@ -113,7 +124,7 @@
         {pos:"1-6", id:"1114300155", ch:"朱雯芳", en:"Mia"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅", en:"Luna"}, {pos:"3-6", id:"1114300124", ch:"林沁榆", en:"Amber"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩", en:"Bianca"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉", en:"Iris"}, {pos:"6-6", id:"1114300164", ch:"王以倫", en:"Juan Jose"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬", en:"Miller"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾", en:"Mikayeel"},
         {pos:"1-5", id:"1114300171", ch:"張湘翊", en:"Cecelia"}, {pos:"2-5", id:"1114300160", ch:"陳漢庭", en:"Lina"}, {pos:"3-5", id:"1114300159", ch:"陳冠宇", en:"Benson"}, {pos:"4-5", id:"1114300123", ch:"陳湘甯", en:"Ariel"}, {pos:"5-5", id:"1114300131", ch:"陳又瑄", en:"Christy"}, {pos:"6-5", id:"1114300170", ch:"張子瑜", en:"Yvonne"}, {pos:"7-5", id:"1114300121", ch:"龔昱瑄", en:"Kelly"}, {pos:"8-5", id:"1114300151", ch:"張雅玟", en:"Judy"},
         {pos:"1-4", id:"1114300153", ch:"陳以婕", en:"Emma"}, {pos:"2-4", id:"1114300167", ch:"柯品瑀", en:"Pamela"}, {pos:"3-4", id:"1114300158", ch:"陳琦涵", en:"Hannah"}, {pos:"4-4", id:"1114300147", ch:"李恩妮", en:"Miu Miu"}, {pos:"5-4", id:"1114300129", ch:"陳靜宜", en:"Luna"}, {pos:"6-4", id:"1114300148", ch:"林金姵", en:"Linda"}, {pos:"7-4", id:"1114300127", ch:"陳乙瑄", en:"Sharon"}, {pos:"8-4", id:"1114300143", ch:"許唯芯", en:"Una"},
-        {pos:"1-3", id:"1114300161", ch:"張乙芹", en:"Irene"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈", en:"Emily"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇", en:"Alina"}, {pos:"4-3", id:"1114300139", ch:"辛俊文", en:"Jun-wen"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏", en:"Amber"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹", en:"Alex"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜", en:"Yuri"}, {pos:"8-3", id:"1114300172", ch:"Nicole"},
+        {pos:"1-3", id:"1114300161", ch:"張乙芹", en:"Irene"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈", en:"Emily"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇", en:"Alina"}, {pos:"4-3", id:"1114300139", ch:"辛俊文", en:"Jun-wen"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏", en:"Amber"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹", en:"Alex"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜", en:"Yuri"}, {pos:"8-3", id:"1114300172", ch:"廖靚薇", en:"Nicole"},
         {pos:"1-2", id:"1114300128", ch:"王漆妤", en:"Zoie"}, {pos:"2-2", id:"1114300134", ch:"江芯語", en:"Ina"}, {pos:"3-2", id:"1114300502", ch:"鄭皓軒", en:"Suppakarn"}, {pos:"4-2", id:"1114300156", ch:"連子甯", en:"Liliya"}, {pos:"5-2", id:"1114300126", ch:"林奕帆", en:"Ivan"}, {pos:"6-2", id:"1114300152", ch:"牛昱翔", en:"Sean"}, {pos:"7-2", id:"1114300135", ch:"陳世豪", en:"Howard"}, {pos:"8-2", id:"1114300166", ch:"林宜樺", en:"Novalie"},
         {pos:"1-1", id:"1114300162", ch:"王妍菻", en:"Grace"}, {pos:"2-1", id:"1114300168", ch:"卓彥均", en:"Cynthia"}, {pos:"3-1", id:"1114300144", ch:"遊芯語", en:"Abby"}, {pos:"4-1", id:"1114300149", ch:"陳可紜", en:"Amber"}, {pos:"5-1", id:"1114300136", ch:"曾安岑", en:"Ann"}, {pos:"6-1", id:"1114300145", ch:"李易昌", en:"Jason"}, {pos:"7-1", id:"1114300122", ch:"余沛容", en:"Melody"}, {pos:"8-1", id:"empty", ch:"(空位)", en:""}
     ];
