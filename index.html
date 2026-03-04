@@ -3,86 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 點名系統 (電腦版原始排版)</title>
+    <title>XE60C 點名系統 (正式版)</title>
     <style>
         :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; }
         
         body { 
             font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
-            background: var(--bg); 
-            margin: 0; 
-            padding: 20px; 
-            /* 確保內容不會因為手機螢幕窄就縮在一起 */
-            min-width: 1000px; 
+            background: var(--bg); margin: 0; padding: 30px; 
+            min-width: 1050px; 
         }
 
-        /* 固定寬度，不隨螢幕大小變動 */
         .container { 
-            width: 1000px; 
-            margin: 0 auto; 
-            background: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            width: 1000px; margin: 0 auto; background: white; 
+            padding: 30px; border-radius: 15px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
         }
 
-        header { text-align: center; margin-bottom: 20px; }
-        h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
+        header { text-align: center; margin-bottom: 25px; }
+        h1 { margin: 0; color: var(--primary); font-size: 2rem; }
         
         .stats { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 30px; 
-            margin-bottom: 20px; 
-            background: #f8f9fa; 
-            padding: 15px; 
-            border-radius: 8px; 
-            font-weight: bold; 
+            display: flex; justify-content: center; align-items: center; 
+            gap: 40px; margin-bottom: 25px; background: #f8f9fa; 
+            padding: 20px; border-radius: 10px; font-weight: bold; font-size: 1.2rem;
         }
 
-        .subject-select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 1rem; }
+        .subject-select { padding: 8px 15px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; }
 
-        /* 固定每格寬度，維持原始 8 欄排版 */
+        /* 修正格子寬度與走道比例，改善「太細長」的問題 */
         .seating-chart { 
             display: grid; 
-            grid-template-columns: repeat(2, 100px) 35px repeat(2, 100px) 35px repeat(2, 100px) 35px repeat(2, 100px); 
-            gap: 10px; 
-            padding: 20px;
-            background: #ddd;
-            border-radius: 8px;
+            grid-template-columns: repeat(2, 110px) 25px repeat(2, 110px) 25px repeat(2, 110px) 25px repeat(2, 110px); 
+            gap: 12px; 
+            padding: 25px;
+            background: #cbd5e0;
+            border-radius: 12px;
             justify-content: center;
         }
 
         .gap-column { background: transparent; pointer-events: none; }
 
         .seat { 
-            background: white; border: 1px solid #ccc; border-radius: 4px; 
-            padding: 10px 2px; text-align: center; min-height: 80px; 
+            background: white; border: 2px solid #a0aec0; border-radius: 8px; 
+            /* 增加高度，解決細長感 */
+            padding: 12px 5px; text-align: center; min-height: 105px; 
             cursor: pointer; display: flex; flex-direction: column; 
-            justify-content: center; transition: 0.2s;
+            justify-content: space-between; transition: 0.15s;
+            box-sizing: border-box;
         }
 
-        .seat-info { font-size: 0.65rem; color: #888; margin-bottom: 3px; }
-        .stu-id { font-size: 0.75rem; color: #2c3e50; font-family: monospace; font-weight: bold; }
-        .name-ch { font-size: 1rem; font-weight: bold; }
-        .name-en { font-size: 0.8rem; color: #555; }
+        /* 文字樣式最佳化 */
+        .seat-info { font-size: 0.75rem; color: #718096; font-weight: normal; }
+        .stu-id { font-size: 0.85rem; color: #2d3748; font-family: monospace; font-weight: bold; }
+        .name-ch { font-size: 1.25rem; font-weight: 900; color: #000; margin: 2px 0; }
+        .name-en { font-size: 0.8rem; color: #4a5568; }
 
-        .present { background-color: #e6fffa; border-color: var(--success); color: #234e52; }
-        .absent { background-color: #fff5f5; border-color: var(--danger); color: #822727; }
-        .empty { background-color: #eee; border: 1px dashed #aaa; cursor: default; }
+        .present { background-color: #f0fff4; border-color: var(--success) !important; color: #22543d; }
+        .absent { background-color: #fff5f5; border-color: var(--danger) !important; color: #822727; }
+        .empty { background-color: #edf2f7; border: 2px dashed #cbd5e0; cursor: default; opacity: 0.6; }
 
         .screen { 
-            width: 400px; margin: 30px auto 0 auto; background: #333; color: white; 
-            text-align: center; padding: 15px; border-radius: 10px;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.2); font-weight: bold; font-size: 1.2rem;
-            letter-spacing: 5px;
+            width: 500px; margin: 40px auto 0 auto; background: #2d3748; color: white; 
+            text-align: center; padding: 18px; border-radius: 12px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 1.4rem;
+            letter-spacing: 10px; border-bottom: 5px solid #4a5568;
         }
 
-        .controls { margin-top: 30px; text-align: center; display: flex; gap: 15px; justify-content: center; }
-        button { padding: 12px 25px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; }
-        .btn-copy { background: var(--primary); color: white; }
-        .btn-reset { background: #e2e8f0; }
+        .controls { margin-top: 40px; text-align: center; display: flex; gap: 20px; justify-content: center; }
+        button { padding: 15px 35px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; }
+        .btn-copy { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-reset { background: #e2e8f0; color: #4a5568; }
     </style>
 </head>
 <body>
@@ -140,17 +130,17 @@
                 const seat = document.createElement('div');
                 if (s.id === 'empty') {
                     seat.className = 'seat empty';
-                    seat.innerHTML = `<span class="seat-info">${s.pos}</span><span class="name-ch">空位</span>`;
+                    seat.innerHTML = `<span class="seat-info">${s.pos}</span><span class="name-ch" style="color:#a0aec0">空</span>`;
                 } else {
                     attendance[s.id] = true;
                     seat.className = 'seat present';
                     seat.id = `seat-${s.id}`;
                     const lastThree = s.id.slice(-3);
                     seat.innerHTML = `
-                        <span class="seat-info">${s.pos}</span>
-                        <span class="stu-id">${lastThree}</span>
-                        <span class="name-ch">${s.ch}</span>
-                        <span class="name-en">${s.en}</span>
+                        <div class="seat-info">${s.pos}</div>
+                        <div class="stu-id">${lastThree}</div>
+                        <div class="name-ch">${s.ch}</div>
+                        <div class="name-en">${s.en}</div>
                     `;
                     seat.onclick = () => toggle(s.id);
                 }
@@ -178,7 +168,7 @@
         document.getElementById('absent-count').innerText = total - present;
     }
 
-    function reset() { if(confirm('重設所有狀態？')) init(); }
+    function reset() { if(confirm('重設所有點名狀態？')) init(); }
 
     function exportResult() {
         const subject = document.getElementById('subject').value;
@@ -189,7 +179,7 @@
         const dateStr = new Date().toLocaleDateString();
         const resultText = `XE60C${subjectText} 點名紀錄\n日期: ${dateStr}\n缺席: ${absentList.length > 0 ? absentList.join(', ') : '全員出席'}`;
         navigator.clipboard.writeText(resultText);
-        alert(`已複製名單到剪貼簿！`);
+        alert(`名單已複製！`);
     }
 
     init();
