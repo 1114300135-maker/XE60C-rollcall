@@ -12,7 +12,6 @@
         h1 { margin: 0; color: var(--primary); font-size: 1.5rem; }
         
         .stats { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; font-weight: bold; }
-        
         .subject-select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 1rem; }
 
         .seating-chart { 
@@ -151,13 +150,17 @@
     function exportResult() {
         const subject = document.getElementById('subject').value;
         const subjectText = (subject === 'none') ? "" : ` ${subject}`;
-        const absent = rawData.filter(s => s.id !== 'empty' && !attendance[s.id]).map(s => s.ch);
-        const dateStr = new Date().toLocaleDateString();
         
-        const resultText = `XE60C${subjectText} 點名紀錄\n日期: ${dateStr}\n缺席: ${absent.length > 0 ? absent.join(', ') : '全員出席'}`;
+        // 關鍵修改：加上學號後三碼
+        const absentList = rawData
+            .filter(s => s.id !== 'empty' && !attendance[s.id])
+            .map(s => `${s.id.toString().slice(-3)} ${s.ch}`);
+            
+        const dateStr = new Date().toLocaleDateString();
+        const resultText = `XE60C${subjectText} 點名紀錄\n日期: ${dateStr}\n缺席: ${absentList.length > 0 ? absentList.join(', ') : '全員出席'}`;
         
         navigator.clipboard.writeText(resultText);
-        alert(`已複製 ${subjectText === "" ? "點名紀錄" : subjectText + " 名單"} 到剪貼簿！`);
+        alert(`已複製名單到剪貼簿！`);
     }
 
     init();
