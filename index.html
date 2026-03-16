@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧點名系統 v3.5</title>
+    <title>XE60C 智慧點名系統 v3.6</title>
     <style>
         :root { 
             --primary: #475569; --success: #10b981; --danger: #ef4444; 
@@ -18,13 +18,12 @@
         .stat-card { text-align: center; border-left: 1px solid #e2e8f0; }
         .stat-value { font-size: 1.6rem; font-weight: 800; display: block; }
 
-        /* 保存管理區 */
         .save-manager { background: #f1f5f9; padding: 15px 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .save-input-group { display: flex; gap: 10px; margin-bottom: 10px; }
         .save-list { display: flex; gap: 8px; flex-wrap: wrap; }
-        .save-tag { background: white; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
-        .save-tag:hover { border-color: var(--highlight); color: var(--highlight); }
-        .save-tag .del-btn { color: #94a3b8; font-weight: bold; cursor: pointer; }
+        .save-tag { background: white; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 10px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .save-tag:hover { border-color: var(--highlight); color: var(--highlight); transform: translateY(-1px); }
+        .save-tag .del-btn { color: #94a3b8; font-weight: bold; cursor: pointer; font-size: 1.2rem; }
         .save-tag .del-btn:hover { color: var(--danger); }
 
         .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 12px; padding: 25px; background: #f1f5f9; border-radius: 20px; justify-content: center; }
@@ -63,11 +62,10 @@
 
     <div class="save-manager">
         <div class="save-input-group">
-            <input type="text" id="save-name" placeholder="輸入佈局名稱 (如: A 班週一)" style="flex:1; padding:10px; border-radius:10px; border:1px solid #cbd5e1;">
-            <button onclick="saveCurrentLayout()" style="background:var(--success); color:white; padding:10px 20px;">💾 保存當前佈局</button>
+            <input type="text" id="save-name" placeholder="佈局名稱" style="flex:1; padding:10px; border-radius:10px; border:1px solid #cbd5e1; font-weight: bold; color: var(--highlight);">
+            <button onclick="saveCurrentLayout()" style="background:var(--success); color:white; padding:10px 20px;">💾 保存此佈局</button>
         </div>
-        <div id="save-list" class="save-list">
-            </div>
+        <div id="save-list" class="save-list"></div>
     </div>
 
     <div class="header-box">
@@ -87,14 +85,14 @@
     <div class="footer-controls">
         <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動指定學生</button>
         <button class="btn-shuffle" onclick="shuffleUnfixed()">🔀 打亂其餘同學</button>
-        <button class="btn-reset" onclick="resetAll()" style="background:#f1f5f9; color:#64748b;">🔄 重設</button>
+        <button class="btn-reset" onclick="resetAll()" style="background:#f1f5f9; color:#64748b;">🔄 重設系統</button>
     </div>
 </div>
 
 <div id="picker-overlay">
     <div class="picker-content">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0">快速尋找學生 (學號或姓名)</h3>
+            <h3 style="margin:0">快速搜尋學生</h3>
             <button onclick="closePicker()" style="background:none; font-size:1.5rem;">&times;</button>
         </div>
         <input type="text" id="picker-search" placeholder="輸入學號後三碼..." autocomplete="off">
@@ -103,7 +101,6 @@
 </div>
 
 <script>
-    // 原始資料 (維持不變)
     const rawData = [
         {pos:"1-7", id:"1114300146", ch:"李婕禕"}, {pos:"2-7", id:"1114300501", ch:"賈伯珍"}, {pos:"3-7", id:"1114300174", ch:"蔡悅琳"}, {pos:"4-7", id:"1114300137", ch:"賴瑾安"}, {pos:"5-7", id:"1114300154", ch:"張鈺婕"}, {pos:"6-7", id:"1114300165", ch:"趙于嫻"}, {pos:"7-7", id:"1114300141", ch:"林紫騏"}, {pos:"8-7", id:"1114300173", ch:"黃毓霏"},
         {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾"},
@@ -121,26 +118,38 @@
     let isChangingMode = false;
     let pickingIdx = null;
 
-    function init() { renderGrid(); renderSaveList(); updateUI(); }
+    function init() { 
+        renderGrid(); 
+        renderSaveList(); 
+        updateUI(); 
+        setDefaultDate(); // 初始化自動日期
+    }
 
-    // --- 儲存管理邏輯 ---
+    // --- 日期與保存邏輯 ---
+    function setDefaultDate() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        document.getElementById('save-name').value = `${yyyy}-${mm}-${dd}`;
+    }
+
     function saveCurrentLayout() {
         const name = document.getElementById('save-name').value.trim();
         if (!name) return alert("請輸入佈局名稱！");
         savedLayouts[name] = {
-            layout: [...currentLayout],
+            layout: JSON.parse(JSON.stringify(currentLayout)),
             fixed: [...manualFixedIds]
         };
         localStorage.setItem('xe60c_library', JSON.stringify(savedLayouts));
-        document.getElementById('save-name').value = '';
         renderSaveList();
-        alert(`佈局「${name}」已保存！`);
+        alert(`佈局「${name}」已保存成功！`);
     }
 
     function renderSaveList() {
         const listEl = document.getElementById('save-list');
         listEl.innerHTML = '';
-        Object.keys(savedLayouts).forEach(name => {
+        Object.keys(savedLayouts).sort().reverse().forEach(name => {
             const tag = document.createElement('div');
             tag.className = 'save-tag';
             tag.innerHTML = `<span>${name}</span><span class="del-btn" onclick="deleteLayout('${name}', event)">&times;</span>`;
@@ -150,22 +159,22 @@
     }
 
     function loadLayout(name) {
-        if (!confirm(`確定要切換至「${name}」的座位表嗎？`)) return;
+        if (!confirm(`要載入「${name}」的座位安排嗎？`)) return;
         const data = savedLayouts[name];
-        currentLayout = [...data.layout];
+        currentLayout = JSON.parse(JSON.stringify(data.layout));
         manualFixedIds = [...data.fixed];
         save(); renderGrid();
     }
 
     function deleteLayout(name, e) {
         e.stopPropagation();
-        if (!confirm(`刪除「${name}」？`)) return;
+        if (!confirm(`確定刪除「${name}」？`)) return;
         delete savedLayouts[name];
         localStorage.setItem('xe60c_library', JSON.stringify(savedLayouts));
         renderSaveList();
     }
 
-    // --- 核心座位與搜尋邏輯 ---
+    // --- 核心座位邏輯 ---
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
         document.body.classList.toggle('is-changing', isChangingMode);
@@ -259,7 +268,7 @@
     function updateUI() {
         const p = Object.values(attendance).filter(v => v).length;
         document.getElementById('count-p').innerText = p;
-        document.getElementById('count-a').innerText = 55 - p; // 總人數 55
+        document.getElementById('count-a').innerText = 55 - p; 
     }
 
     function save() {
