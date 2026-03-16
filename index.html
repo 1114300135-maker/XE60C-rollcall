@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧點名系統 v3.3</title>
+    <title>XE60C 智慧點名系統 v3.4</title>
     <style>
         :root { 
             --primary: #475569; --success: #10b981; --danger: #ef4444; 
@@ -14,50 +14,39 @@
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
         .container { width: 1050px; margin: 30px auto; background: var(--card-bg); padding: 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); }
 
-        /* 頂部控制列 */
         .header-box { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 20px; align-items: center; background: #f8fafc; padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .stat-card { text-align: center; border-left: 1px solid #e2e8f0; }
         .stat-value { font-size: 1.6rem; font-weight: 800; display: block; }
 
-        /* 座位圖區域 */
         .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 12px; padding: 25px; background: #f1f5f9; border-radius: 20px; justify-content: center; }
-        
         .seat { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 5px; text-align: center; min-height: 95px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
         
-        /* 狀態配色 */
         .seat.present { background: #ecfdf5; border-color: var(--success); color: #065f46; }
         .seat.absent { background: #fef2f2; border-color: var(--danger); color: #991b1b; }
-        .seat.is-manual { border: 2.5px solid var(--highlight); }
+        .seat.is-manual { border: 2.5px solid var(--highlight); box-shadow: 0 0 8px rgba(59, 130, 246, 0.15); }
 
-        /* 更換模式下的特殊視覺 */
-        body.is-changing .seat { 
-            outline: 2px dashed var(--highlight);
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
+        body.is-changing .seat { outline: 2px dashed var(--highlight); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
         .seat.empty { background: #e2e8f0; border: 1px dashed #cbd5e1; cursor: default; opacity: 0.4; pointer-events: none; }
         .screen { width: 450px; margin: 0 auto 20px; background: var(--primary); color: white; text-align: center; padding: 10px; border-radius: 0 0 40px 40px; font-weight: 700; letter-spacing: 8px; font-size: 0.8rem; }
 
-        /* 按鈕風格 */
         .footer-controls { margin-top: 30px; display: flex; justify-content: center; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 25px; }
         button { border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; padding: 12px 24px; }
-        
         .btn-edit { background: var(--highlight); color: white; }
-        .btn-edit.active { background: #1e293b; } /* 進入更換模式後的顏色 */
+        .btn-edit.active { background: #1e293b; }
         .btn-shuffle { background: var(--purple); color: white; }
-        .btn-reset { background: #f1f5f9; color: #64748b; }
 
-        /* 選人彈窗 */
+        /* 搜尋彈窗優化 */
         #picker-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:100; justify-content:center; align-items:center; backdrop-filter: blur(4px); }
-        .picker-content { background:white; padding:30px; border-radius:24px; width:650px; max-height:85vh; overflow-y:auto; }
-        .picker-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; margin-top:20px; }
-        .picker-item { padding:12px; border:1px solid #f1f5f9; border-radius:10px; cursor:pointer; text-align:center; font-size:0.85rem; background: #f8fafc; }
-        .picker-item:hover { background: var(--highlight); color:white; }
+        .picker-content { background:white; padding:30px; border-radius:24px; width:650px; max-height:85vh; overflow:hidden; display:flex; flex-direction:column; }
+        .picker-header { margin-bottom: 20px; }
+        #picker-search { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1.1rem; box-sizing: border-box; outline: none; transition: 0.2s; }
+        #picker-search:focus { border-color: var(--highlight); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        
+        .picker-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; overflow-y:auto; padding-right: 5px; }
+        .picker-item { padding:12px; border:1px solid #f1f5f9; border-radius:10px; cursor:pointer; text-align:center; font-size:0.85rem; background: #f8fafc; transition: 0.2s; }
+        .picker-item:hover, .picker-item.selected { background: var(--highlight); color:white; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -84,15 +73,18 @@
     <div class="footer-controls">
         <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動指定學生</button>
         <button class="btn-shuffle" onclick="shuffleUnfixed()">🔀 打亂其餘同學</button>
-        <button class="btn-reset" onclick="resetAll()">🔄 全部重設</button>
+        <button class="btn-reset" onclick="resetAll()" style="background:#f1f5f9; color:#64748b;">🔄 重設</button>
     </div>
 </div>
 
 <div id="picker-overlay">
     <div class="picker-content">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0">選擇學生安排在此座位</h3>
-            <button onclick="closePicker()" style="background:none; font-size:1.5rem;">&times;</button>
+        <div class="picker-header">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0">快速尋找學生 (輸入學號或姓名)</h3>
+                <button onclick="closePicker()" style="background:none; font-size:1.5rem; padding:0;">&times;</button>
+            </div>
+            <input type="text" id="picker-search" placeholder="例如輸入: 146 或 禕..." autocomplete="off">
         </div>
         <div class="picker-grid" id="student-picker-list"></div>
     </div>
@@ -101,7 +93,7 @@
 <script>
     const rawData = [
         {pos:"1-7", id:"1114300146", ch:"李婕禕"}, {pos:"2-7", id:"1114300501", ch:"賈伯珍"}, {pos:"3-7", id:"1114300174", ch:"蔡悅琳"}, {pos:"4-7", id:"1114300137", ch:"賴瑾安"}, {pos:"5-7", id:"1114300154", ch:"張鈺婕"}, {pos:"6-7", id:"1114300165", ch:"趙于嫻"}, {pos:"7-7", id:"1114300141", ch:"林紫騏"}, {pos:"8-7", id:"1114300173", ch:"黃毓霏"},
-        {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾"},
+        {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", house:"羅凱爾"},
         {pos:"1-5", id:"1114300171", ch:"張湘翊"}, {pos:"2-5", id:"1114300160", ch:"陳漢庭"}, {pos:"3-5", id:"1114300159", ch:"陳冠宇"}, {pos:"4-5", id:"1114300123", ch:"陳湘甯"}, {pos:"5-5", id:"1114300131", ch:"陳又瑄"}, {pos:"6-5", id:"1114300170", ch:"張子瑜"}, {pos:"7-5", id:"1114300121", ch:"龔昱瑄"}, {pos:"8-5", id:"1114300151", ch:"張雅玟"},
         {pos:"1-4", id:"1114300153", ch:"陳以婕"}, {pos:"2-4", id:"1114300167", ch:"柯品瑀"}, {pos:"3-4", id:"1114300158", ch:"陳琦涵"}, {pos:"4-4", id:"1114300147", ch:"李恩妮"}, {pos:"5-4", id:"1114300129", ch:"陳靜宜"}, {pos:"6-4", id:"1114300148", ch:"林金姵"}, {pos:"7-4", id:"1114300127", ch:"陳乙瑄"}, {pos:"8-4", id:"1114300143", ch:"許唯芯"},
         {pos:"1-3", id:"1114300161", ch:"張乙芹"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇"}, {pos:"4-3", id:"1114300139", ch:"辛俊文"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜"}, {pos:"8-3", id:"1114300172", ch:"廖鍵薇"},
@@ -114,6 +106,7 @@
     let manualFixedIds = JSON.parse(localStorage.getItem('xe60c_fixed')) || [];
     let isChangingMode = false;
     let pickingIdx = null;
+    let filteredStudents = [];
 
     function init() { renderGrid(); updateUI(); }
 
@@ -137,19 +130,8 @@
                 if(attendance[s.id] === undefined) attendance[s.id] = true;
                 const isFixed = manualFixedIds.includes(s.id);
                 seat.className = `seat ${attendance[s.id] ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
-                seat.innerHTML = `
-                    <span style="font-size:0.55rem; opacity:0.6;">${s.pos}</span>
-                    <b style="font-size:1.15rem; margin:2px 0;">${s.id.slice(-3)}</b>
-                    <span style="font-size:0.85rem; font-weight:600;">${s.ch}</span>
-                `;
-                seat.onclick = () => {
-                    if (isChangingMode) {
-                        openPicker(i);
-                    } else {
-                        attendance[s.id] = !attendance[s.id];
-                        save(); renderGrid(); updateUI();
-                    }
-                };
+                seat.innerHTML = `<span style="font-size:0.55rem; opacity:0.6;">${s.pos}</span><b style="font-size:1.15rem; margin:2px 0;">${s.id.slice(-3)}</b><span style="font-size:0.85rem; font-weight:600;">${s.ch}</span>`;
+                seat.onclick = () => { if (isChangingMode) openPicker(i); else { attendance[s.id] = !attendance[s.id]; save(); renderGrid(); updateUI(); } };
             }
             grid.appendChild(seat);
             if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) grid.appendChild(document.createElement('div')).className='gap-column';
@@ -158,18 +140,39 @@
 
     function openPicker(idx) {
         pickingIdx = idx;
+        const searchInput = document.getElementById('picker-search');
+        searchInput.value = '';
+        document.getElementById('picker-overlay').style.display = 'flex';
+        searchInput.focus();
+        updatePickerList('');
+    }
+
+    function updatePickerList(keyword) {
         const listEl = document.getElementById('student-picker-list');
         listEl.innerHTML = '';
-        const sorted = rawData.filter(s => s.id !== 'empty').sort((a,b) => a.id.localeCompare(b.id));
-        sorted.forEach(student => {
+        const allStudents = rawData.filter(s => s.id !== 'empty').sort((a,b) => a.id.localeCompare(b.id));
+        
+        filteredStudents = allStudents.filter(s => 
+            s.id.includes(keyword) || s.ch.includes(keyword)
+        );
+
+        filteredStudents.forEach((student, index) => {
             const item = document.createElement('div');
-            item.className = 'picker-item';
+            item.className = 'picker-item' + (index === 0 && keyword !== '' ? ' selected' : '');
             item.innerText = `${student.id.slice(-3)} ${student.ch}`;
             item.onclick = () => pickStudent(student);
             listEl.appendChild(item);
         });
-        document.getElementById('picker-overlay').style.display = 'flex';
     }
+
+    // 監聽搜尋輸入
+    document.getElementById('picker-search').oninput = (e) => updatePickerList(e.target.value);
+    document.getElementById('picker-search').onkeydown = (e) => {
+        if (e.key === 'Enter' && filteredStudents.length > 0) {
+            pickStudent(filteredStudents[0]);
+        }
+        if (e.key === 'Escape') closePicker();
+    };
 
     function pickStudent(newStudent) {
         const oldStudent = currentLayout[pickingIdx];
@@ -183,7 +186,7 @@
     function closePicker() { document.getElementById('picker-overlay').style.display = 'none'; }
 
     function shuffleUnfixed() {
-        if(isChangingMode) return alert("請先完成更換模式再打亂！");
+        if(isChangingMode) return alert("請先完成指定模式再打亂！");
         let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id));
         for (let i = pool.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -210,13 +213,13 @@
         localStorage.setItem('xe60c_fixed', JSON.stringify(manualFixedIds));
     }
 
-    function resetAll() { if(confirm('確定要徹底重置嗎？')) { localStorage.clear(); location.reload(); } }
+    function resetAll() { if(confirm('重置所有資料？')) { localStorage.clear(); location.reload(); } }
 
     function exportResult() {
         const sorted = rawData.filter(s => s.id !== 'empty').sort((a,b) => a.id.localeCompare(b.id));
         const list = sorted.filter(s => !attendance[s.id]).map(s => `${s.id.slice(-3)}${s.ch}`);
-        const txt = `【${document.getElementById('subject').value} 點名紀錄】\n缺席：${list.length ? list.join(', ') : '全員出席'}`;
-        navigator.clipboard.writeText(txt).then(() => alert('報表已複製！'));
+        const txt = `【${document.getElementById('subject').value} 點名】\n缺席：${list.length ? list.join(', ') : '全員出席'}`;
+        navigator.clipboard.writeText(txt).then(() => alert('複製成功！'));
     }
 
     init();
