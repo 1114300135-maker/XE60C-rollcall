@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧點名排座 v4.3 - 群組綁定版</title>
+    <title>XE60C 智慧排座系統 v4.5</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -11,66 +11,49 @@
             --purple: #8b5cf6; --text: #1e293b; --border: #e2e8f0;
         }
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
-        .container { width: 1050px; margin: 30px auto; background: var(--card-bg); padding: 35px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); }
-        h1 { margin: 0 0 20px 0; color: var(--primary); text-align: center; font-size: 2rem; }
-        .header-box { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 20px; align-items: center; background: var(--bg); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--border); }
-        .stat-card { text-align: center; border-left: 1px solid var(--border); }
-        .stat-value { font-size: 1.8rem; font-weight: 800; display: block; }
-        .save-manager { background: var(--bg); padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid var(--border); }
-        .save-input-group { display: flex; gap: 12px; margin-bottom: 15px; }
-        .save-input-group input { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; }
-        .save-list { display: flex; gap: 10px; flex-wrap: wrap; }
-        .save-tag { background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 10px; cursor: pointer; display: flex; gap: 10px; }
-        .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 12px; padding: 30px; background: #f1f5f9; border-radius: 20px; justify-content: center; }
-        .seat { background: white; border: 2px solid transparent; border-radius: 14px; padding: 12px 5px; text-align: center; min-height: 95px; position: relative; transition: all 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
+        .container { width: 1050px; margin: 20px auto; background: var(--card-bg); padding: 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: var(--primary); font-size: 1.8rem; margin-bottom: 20px; }
+        
+        .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 10px; padding: 25px; background: #f1f5f9; border-radius: 20px; justify-content: center; }
+        .seat { background: white; border: 2px solid transparent; border-radius: 12px; padding: 10px 5px; text-align: center; min-height: 90px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
         .seat.present { background: #ecfdf5; border-color: #a7f3d0; }
-        .seat.absent { background: #fef2f2; border-color: #fecaca; }
-        .seat.is-manual::after { content: '🔒'; position: absolute; top: -8px; right: -8px; font-size: 1rem; background: white; border-radius: 50%; padding: 2px; }
+        .seat.absent { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
         .seat.is-manual { border-color: var(--highlight); }
-        .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.5; pointer-events: none; }
-        .footer-controls { margin-top: 30px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid var(--border); padding-top: 30px; }
-        button { border: none; border-radius: 12px; font-weight: bold; cursor: pointer; padding: 14px 28px; display: flex; align-items: center; gap: 8px; }
-        .btn-edit { background: var(--highlight); color: white; }
-        .btn-edit.active { background: var(--primary); }
+        .seat.is-manual::after { content: '🔒'; position: absolute; top: -5px; right: -5px; font-size: 0.8rem; background: white; border-radius: 50%; padding: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.4; }
+        
+        .header-box { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 12px; }
+        .footer-controls { margin-top: 25px; display: flex; justify-content: center; gap: 12px; }
+        button { border: none; border-radius: 10px; font-weight: bold; cursor: pointer; padding: 12px 20px; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; }
         .btn-shuffle { background: var(--purple); color: white; }
-        #toast { position: fixed; bottom: 30px; right: 30px; background: #1e293b; color: white; padding: 14px 24px; border-radius: 12px; opacity: 0; transition: 0.3s; z-index: 1000; }
+        .btn-edit { background: var(--highlight); color: white; }
+        .btn-edit.active { background: var(--primary); outline: 3px solid rgba(59, 130, 246, 0.3); }
+        
+        #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 8px; opacity: 0; transition: 0.3s; z-index: 1000; }
         #toast.show { opacity: 1; }
-        #picker-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:100; justify-content:center; align-items:center; }
-        #picker-overlay.show { display: flex; }
-        .picker-content { background:white; padding:30px; border-radius:24px; width:600px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧點名排座</h1>
-    <div class="save-manager">
-        <div class="save-input-group">
-            <input type="text" id="save-name" placeholder="佈局名稱" autocomplete="off">
-            <button onclick="saveCurrentLayout()" style="background:var(--success); color:white;">💾 保存佈局</button>
-        </div>
-        <div id="save-list" class="save-list"></div>
-    </div>
+    <h1>XE60C 智慧排座系統 v4.5</h1>
+
     <div class="header-box">
-        <select id="subject"><option>西班牙文</option><option>音樂</option><option>電腦</option></select>
-        <div class="stat-card"><span id="count-p" class="stat-value" style="color:var(--success)">0</span>出席</div>
-        <div class="stat-card"><span id="count-a" class="stat-value" style="color:var(--danger)">0</span>缺席</div>
-        <button style="background:var(--primary); color:white;" onclick="exportResult()">📋 複製報表</button>
+        <select id="subject" style="padding:10px; border-radius:8px;"><option>西班牙文</option><option>音樂</option><option>電腦</option></select>
+        <div style="text-align:center;">出席: <b id="count-p" style="color:var(--success)">0</b></div>
+        <div style="text-align:center;">缺席: <b id="count-a" style="color:var(--danger)">0</b></div>
+        <button onclick="exportResult()" style="background:var(--primary); color:white;">📋 複製報表</button>
     </div>
+
     <div id="seating-grid" class="seating-chart"></div>
+
     <div class="footer-controls">
-        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動指定</button>
-        <button class="btn-shuffle" onclick="shuffleUnfixed()">🔀 打亂座位 (群組綁定)</button>
-        <button onclick="resetAttendance()" style="background:#f1f5f9; color:#64748b;">🧹 清除點名</button>
+        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定</button>
+        <button class="btn-shuffle" onclick="shuffleLogic()">🔀 隨機打亂 (三組磁鐵規則)</button>
+        <button onclick="resetAttendance()" style="background:#e2e8f0; color:var(--primary);">🧹 清除今日點名</button>
     </div>
 </div>
 
-<div id="picker-overlay"><div class="picker-content">
-    <h3>更換學生</h3>
-    <input type="text" id="picker-search" placeholder="搜尋姓名或學號..." style="width:100%; padding:10px; margin-bottom:10px;">
-    <div id="student-picker-list" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-height:400px; overflow-y:auto;"></div>
-    <button onclick="closePicker()" style="margin-top:20px; width:100%; justify-content:center;">取消</button>
-</div></div>
 <div id="toast">提示訊息</div>
 
 <script>
@@ -84,19 +67,17 @@
         {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", ch:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空)"}
     ];
 
-    let attendance = JSON.parse(localStorage.getItem('xe60c_v2')) || {};
+    let attendance = JSON.parse(localStorage.getItem('xe60c_att')) || {};
     let currentLayout = JSON.parse(localStorage.getItem('xe60c_layout')) || [...rawData];
     let manualFixedIds = JSON.parse(localStorage.getItem('xe60c_fixed')) || [];
-    let savedLayouts = JSON.parse(localStorage.getItem('xe60c_library')) || {};
     let isChangingMode = false;
-    let pickingIdx = null;
 
     function showToast(msg) {
         const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 2000);
     }
 
-    function init() { renderGrid(); renderSaveList(); updateUI(); }
+    function init() { renderGrid(); updateUI(); }
 
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
@@ -112,84 +93,111 @@
                 const isFixed = manualFixedIds.includes(s.id);
                 seat.className = `seat ${attendance[s.id] !== false ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
                 seat.innerHTML = `<small>${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
-                seat.onclick = () => { if (isChangingMode) openPicker(i); else { attendance[s.id] = !attendance[s.id]; save(); renderGrid(); updateUI(); } };
+                seat.onclick = () => {
+                    if (isChangingMode) {
+                        if(isFixed) manualFixedIds = manualFixedIds.filter(id => id !== s.id);
+                        else manualFixedIds.push(s.id);
+                        save(); renderGrid();
+                    } else {
+                        attendance[s.id] = !attendance[s.id]; save(); renderGrid(); updateUI();
+                    }
+                };
             }
             grid.appendChild(seat);
             if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) { let gap = document.createElement('div'); gap.style.width = '40px'; grid.appendChild(gap); }
         });
     }
 
-    // ====== 核心：四人幫 + 打亂邏輯 ======
-    function shuffleUnfixed() {
-        const groupIds = ["1114300133", "1114300129", "1114300123", "1114300132"];
+    function shuffleLogic() {
+        // 設定磁鐵名單
+        const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
+        const groupPair1 = ["1114300124", "1114300136"];
+        const groupPair2 = ["1114300126", "1114300502"]; // 新加入的組
         
-        // 1. 準備學生池 (扣除手動鎖定者)
         let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id));
         let freeIndices = [];
         currentLayout.forEach((s, i) => { if(s.id !== 'empty' && !manualFixedIds.includes(s.id)) freeIndices.push(i); });
 
         let finalMap = new Array(currentLayout.length).fill(null);
-        manualFixedIds.forEach(id => { const idx = currentLayout.findIndex(s => s.id === id); finalMap[idx] = currentLayout[idx]; });
+        manualFixedIds.forEach(id => {
+            const idx = currentLayout.findIndex(s => s.id === id);
+            finalMap[idx] = currentLayout.find(s => s.id === id);
+        });
 
-        // 2. 處理四人幫群組 (優先尋找 2x2 空間)
-        const groupInPool = pool.filter(s => groupIds.includes(s.id));
-        if (groupInPool.length === 4) {
-            let possibleBlocks = [];
-            // 尋找 2x2 區塊 (必須在同一個 2-欄區塊內且上下相鄰)
-            for (let r = 0; r < 6; r++) { // 共有 7 列
-                for (let c = 0; c < 8; c += 2) { // 共有 4 個 2-欄區塊
+        const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        // 1. 處理四人幫
+        const fInPool = pool.filter(s => groupFour.includes(s.id));
+        if (fInPool.length === 4) {
+            let blocks = [];
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 8; c += 2) {
                     let b = [r*8+c, r*8+c+1, (r+1)*8+c, (r+1)*8+c+1];
-                    if (b.every(idx => freeIndices.includes(idx))) possibleBlocks.push(b);
+                    if (b.every(idx => freeIndices.includes(idx))) blocks.push(b);
                 }
             }
-
-            if (possibleBlocks.length > 0) {
-                const block = possibleBlocks[Math.floor(Math.random() * possibleBlocks.length)];
-                groupInPool.sort(() => Math.random() - 0.5); // 四人內部隨機
-                block.forEach((seatIdx, i) => {
-                    finalMap[seatIdx] = groupInPool[i];
-                    freeIndices = freeIndices.filter(idx => idx !== seatIdx);
-                    pool = pool.filter(s => s.id !== groupInPool[i].id);
+            if (blocks.length > 0) {
+                const b = blocks[Math.floor(Math.random() * blocks.length)];
+                shuffleArr(fInPool).forEach((s, i) => {
+                    finalMap[b[i]] = s;
+                    freeIndices = freeIndices.filter(idx => idx !== b[i]);
+                    pool = pool.filter(p => p.id !== s.id);
                 });
             }
         }
 
-        // 3. 剩餘學生洗牌填充
-        pool.sort(() => Math.random() - 0.5);
-        freeIndices.forEach((seatIdx, i) => { finalMap[seatIdx] = pool[i]; });
+        // 2. 處理兩對二人組
+        [groupPair1, groupPair2].forEach(pairIds => {
+            const pInPool = pool.filter(s => pairIds.includes(s.id));
+            if (pInPool.length === 2) {
+                let pairs = [];
+                for (let i of freeIndices) {
+                    if (i % 2 === 0 && freeIndices.includes(i + 1)) pairs.push([i, i + 1]);
+                }
+                if (pairs.length > 0) {
+                    const p = pairs[Math.floor(Math.random() * pairs.length)];
+                    shuffleArr(pInPool).forEach((s, i) => {
+                        finalMap[p[i]] = s;
+                        freeIndices = freeIndices.filter(idx => idx !== p[i]);
+                        pool = pool.filter(item => item.id !== s.id);
+                    });
+                }
+            }
+        });
+
+        // 3. 剩下隨機
+        shuffleArr(pool);
+        freeIndices.forEach((idx, i) => { finalMap[idx] = pool[i]; });
 
         currentLayout = currentLayout.map((s, i) => {
             if (s.id === 'empty') return s;
             return { ...finalMap[i], pos: s.pos };
         });
 
-        save(); renderGrid(); showToast("打亂完成 (四人幫已聚首)");
+        save(); renderGrid(); showToast("三組特定對象已成功安置！");
     }
 
-    function save() { localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout)); localStorage.setItem('xe60c_fixed', JSON.stringify(manualFixedIds)); }
-    function updateUI() { const p = Object.values(attendance).filter(v => v !== false).length; document.getElementById('count-p').innerText = p; document.getElementById('count-a').innerText = 55 - p; }
-    function resetAttendance() { attendance = {}; save(); renderGrid(); updateUI(); }
-    
-    // 省略部分 UI 功能以縮減代碼長度，功能與之前版本一致...
-    function openPicker(idx) { pickingIdx = idx; document.getElementById('picker-overlay').classList.add('show'); updatePickerList(''); }
-    function closePicker() { document.getElementById('picker-overlay').classList.remove('show'); }
-    function updatePickerList(k) {
-        const l = document.getElementById('student-picker-list'); l.innerHTML = '';
-        rawData.filter(s => s.id !== 'empty').forEach(st => {
-            const i = document.createElement('div'); i.className = 'picker-item'; i.style = "padding:5px; border:1px solid #ccc; cursor:pointer;";
-            i.innerText = st.ch; i.onclick = () => {
-                const old = currentLayout[pickingIdx];
-                const tIdx = currentLayout.findIndex(s => s.id === st.id);
-                if(tIdx !== -1) currentLayout[tIdx] = { ...old, pos: currentLayout[tIdx].pos };
-                currentLayout[pickingIdx] = { ...st, pos: old.pos };
-                if(!manualFixedIds.includes(st.id)) manualFixedIds.push(st.id);
-                save(); closePicker(); renderGrid();
-            };
-            l.appendChild(i);
-        });
+    function save() {
+        localStorage.setItem('xe60c_att', JSON.stringify(attendance));
+        localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout));
+        localStorage.setItem('xe60c_fixed', JSON.stringify(manualFixedIds));
     }
-    function saveCurrentLayout() { /* 實作與 v4.2 相同 */ }
-    function renderSaveList() { /* 實作與 v4.2 相同 */ }
+
+    function updateUI() {
+        const p = Object.values(attendance).filter(v => v !== false).length;
+        document.getElementById('count-p').innerText = p;
+        document.getElementById('count-a').innerText = 55 - p;
+    }
+
+    function resetAttendance() {
+        if(confirm("重置今日點名？")) { attendance = {}; save(); renderGrid(); updateUI(); }
+    }
+
+    function exportResult() {
+        const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
+        navigator.clipboard.writeText("缺席名單：" + (list.join(', ') || '全員出席'));
+        showToast("報表已複製");
+    }
 
     init();
 </script>
