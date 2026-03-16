@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧點名系統 v2.2b</title>
+    <title>XE60C 智慧點名系統 v2.3</title>
     <style>
         :root { 
             --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; 
@@ -27,25 +27,32 @@
         }
         .seat.present { background: #e6fffa; border-color: var(--success); }
         .seat.absent { background: #fff5f5; border-color: var(--danger); }
-        .seat.locked { border: 2px solid var(--lock); box-shadow: 0 0 5px rgba(243, 156, 18, 0.3); }
+        .seat.locked { border: 2px solid var(--lock); box-shadow: 0 0 5px rgba(243, 156, 18, 0.4); }
         .seat.empty { background: #eee; border: 1px dashed #aaa; cursor: default; opacity: 0.5; pointer-events: none; }
-        .lock-btn { 
-            position: absolute; top: 2px; right: 2px; font-size: 0.7rem; width: 20px; height: 20px; 
-            background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;
-        }
-        .seat.locked .lock-btn { background: var(--lock); color: white; }
+        
+        .seat-ctrls { position: absolute; top: 2px; right: 2px; display: flex; gap: 2px; z-index: 10; }
+        .mini-btn { width: 18px; height: 18px; font-size: 0.6rem; background: #eee; border-radius: 3px; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; }
+        .seat.locked .lock-btn { background: var(--lock); color: white; border-color: var(--lock); }
+
         .footer-controls { text-align: center; margin-top: 30px; display: flex; justify-content: center; gap: 15px; }
         button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
+        
+        /* 彈窗選擇器 */
+        #picker-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100; justify-content:center; align-items:center; }
+        .picker-content { background:white; padding:20px; border-radius:15px; width:600px; max-height:80vh; overflow-y:auto; }
+        .picker-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; margin-top:15px; }
+        .picker-item { padding:8px; border:1px solid #ddd; border-radius:5px; cursor:pointer; text-align:center; font-size:0.8rem; }
+        .picker-item:hover { background: var(--highlight); color:white; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header style="text-align:center;"><h1>XE60C 智慧點名系統</h1></header>
+    <header style="text-align:center;"><h1>XE60C 智慧點名系統 v2.3</h1></header>
 
     <div class="tab-nav">
-        <div class="tab-btn active" onclick="switchPage('grid', event)">🪑 座位模式</div>
-        <div class="tab-btn" onclick="switchPage('focus', event)">🔢 導航模式</div>
+        <div class="tab-btn active" onclick="switchPage('grid', event)">🪑 指定座位模式</div>
+        <div class="tab-btn" onclick="switchPage('focus', event)">🔢 導航點名模式</div>
     </div>
 
     <div class="header-box">
@@ -57,7 +64,9 @@
 
     <div id="page-grid" class="page active">
         <div id="seating-grid" class="seating-chart"></div>
-        <p style="text-align:center; color:#7f8c8d; font-size:0.8rem;">提示：點擊右上角 🔓 鎖定座位，打亂時該生不動</p>
+        <div style="text-align:center; margin-top:10px; color:#666; font-size:0.9rem;">
+            操作說明：點擊右上方 <b>👤</b> 更換該位同學 | 點擊 <b>🔓</b> 鎖定位置 | 點擊中間切換出席
+        </div>
     </div>
 
     <div id="page-focus" class="page">
@@ -77,8 +86,16 @@
     </div>
 
     <div class="footer-controls">
-        <button style="background:var(--purple); color:white;" onclick="shuffleSeats()">🔀 打亂其餘座位</button>
-        <button style="background:#edf2f7; color:#4a5568;" onclick="resetAll()">重設全部</button>
+        <button style="background:var(--purple); color:white;" onclick="shuffleSeats()">🔀 打亂「未指定」的座位</button>
+        <button style="background:#edf2f7; color:#4a5568;" onclick="resetAll()">全部重設</button>
+    </div>
+</div>
+
+<div id="picker-overlay">
+    <div class="picker-content">
+        <h3>選擇要安排在此位置的學生</h3>
+        <div class="picker-grid" id="student-picker-list"></div>
+        <button style="margin-top:20px; width:100%; background:#eee;" onclick="closePicker()">取消</button>
     </div>
 </div>
 
@@ -98,15 +115,9 @@
     let lockedIds = JSON.parse(localStorage.getItem('xe60c_locks')) || [];
     let sortedList = rawData.filter(s => s.id !== 'empty').sort((a,b) => a.id.localeCompare(b.id));
     let focusIdx = 0;
+    let pickingPosIndex = null;
 
     function init() { renderGrid(); updateUI(); }
-
-    function switchPage(p, e) {
-        document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
-        document.getElementById('page-'+p).classList.add('active');
-        e.currentTarget.classList.add('active');
-    }
 
     function renderGrid() {
         const grid = document.getElementById('seating-grid');
@@ -120,14 +131,58 @@
                 if(attendance[s.id] === undefined) attendance[s.id] = true;
                 const isLocked = lockedIds.includes(s.id);
                 seat.className = `seat ${attendance[s.id] ? 'present' : 'absent'} ${isLocked ? 'locked' : ''}`;
-                seat.innerHTML = `<div class="lock-btn" onclick="toggleLock('${s.id}', event)">${isLocked ? '🔒' : '🔓'}</div>
-                                  <span style="font-size:0.6rem">${s.pos}</span><br><b>${s.id.slice(-3)}</b><br>${s.ch}`;
+                seat.innerHTML = `
+                    <div class="seat-ctrls">
+                        <div class="mini-btn" onclick="openPicker(${i}, event)">👤</div>
+                        <div class="mini-btn lock-btn" onclick="toggleLock('${s.id}', event)">${isLocked ? '🔒' : '🔓'}</div>
+                    </div>
+                    <span style="font-size:0.6rem">${s.pos}</span><br><b>${s.id.slice(-3)}</b><br>${s.ch}`;
                 seat.onclick = () => { attendance[s.id] = !attendance[s.id]; save(); renderGrid(); updateUI(); };
             }
             grid.appendChild(seat);
             if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) grid.appendChild(document.createElement('div')).className='gap-column';
         });
     }
+
+    // 打開選人視窗
+    function openPicker(index, e) {
+        e.stopPropagation();
+        pickingPosIndex = index;
+        const listEl = document.getElementById('student-picker-list');
+        listEl.innerHTML = '';
+        
+        // 列出所有學生，方便指定
+        sortedList.forEach(student => {
+            const item = document.createElement('div');
+            item.className = 'picker-item';
+            item.innerText = `${student.id.slice(-3)} ${student.ch}`;
+            item.onclick = () => pickStudent(student);
+            listEl.appendChild(item);
+        });
+        document.getElementById('picker-overlay').style.display = 'flex';
+    }
+
+    function pickStudent(newStudent) {
+        const oldStudent = currentLayout[pickingPosIndex];
+        
+        // 1. 找到這位新同學原本在哪個位置，把它跟舊同學對調
+        const oldPosOfNewStudent = currentLayout.findIndex(s => s.id === newStudent.id);
+        if(oldPosOfNewStudent !== -1) {
+            currentLayout[oldPosOfNewStudent] = { ...oldStudent, pos: currentLayout[oldPosOfNewStudent].pos };
+        }
+        
+        // 2. 把新同學放到指定位置
+        currentLayout[pickingPosIndex] = { ...newStudent, pos: oldStudent.pos };
+        
+        // 3. 指定後自動鎖定
+        if(!lockedIds.includes(newStudent.id)) lockedIds.push(newStudent.id);
+        
+        save();
+        closePicker();
+        renderGrid();
+    }
+
+    function closePicker() { document.getElementById('picker-overlay').style.display = 'none'; }
 
     function toggleLock(id, e) {
         e.stopPropagation();
@@ -137,21 +192,34 @@
     }
 
     function shuffleSeats() {
+        // 1. 找出所有未鎖定的學生 ID
         let pool = currentLayout.filter(s => s.id !== 'empty' && !lockedIds.includes(s.id));
+        
+        // 2. 洗牌
         for (let i = pool.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
+        
+        // 3. 填回未鎖定的位置
         let poolIdx = 0;
         currentLayout = currentLayout.map(cell => {
             if (cell.id === 'empty' || lockedIds.includes(cell.id)) return cell;
             const nextStudent = pool[poolIdx++];
             return { ...nextStudent, pos: cell.pos };
         });
-        localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout));
+        
+        save();
         renderGrid();
     }
 
+    // 基本邏輯保持不變
+    function switchPage(p, e) {
+        document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+        document.getElementById('page-'+p).classList.add('active');
+        e.currentTarget.classList.add('active');
+    }
     function updateUI() {
         const p = Object.values(attendance).filter(v => v).length;
         document.getElementById('count-p').innerText = p;
@@ -163,24 +231,19 @@
         st.innerText = attendance[s.id] ? "出席中" : "缺席中";
         st.style.color = attendance[s.id] ? "var(--success)" : "var(--danger)";
     }
-
     function step(v) { attendance[sortedList[focusIdx].id] = v; save(); changeFocus(1); renderGrid(); }
     function changeFocus(n) { focusIdx = (focusIdx + n + sortedList.length) % sortedList.length; updateUI(); }
-    function save() { localStorage.setItem('xe60c_v2', JSON.stringify(attendance)); }
-    
-    function resetAll() {
-        if(confirm('確定重置所有資料？')) {
-            localStorage.clear();
-            location.reload();
-        }
+    function save() { 
+        localStorage.setItem('xe60c_v2', JSON.stringify(attendance)); 
+        localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout));
+        localStorage.setItem('xe60c_locks', JSON.stringify(lockedIds));
     }
-
+    function resetAll() { if(confirm('確定重置所有資料？')) { localStorage.clear(); location.reload(); } }
     function exportResult() {
         const list = sortedList.filter(s => !attendance[s.id]).map(s => `${s.id.slice(-3)}${s.ch}`);
         const txt = `${document.getElementById('subject').value} 點名紀錄\n缺席：${list.length ? list.join(', ') : '全員出席'}`;
         navigator.clipboard.writeText(txt).then(() => alert('已複製！'));
     }
-
     document.addEventListener('keydown', (e) => {
         if(!document.getElementById('page-focus').classList.contains('active')) return;
         if(e.key === 'Enter') step(true);
