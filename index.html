@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v4.5</title>
+    <title>XE60C 終極智慧排座 v4.6</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -12,51 +12,59 @@
         }
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
         .container { width: 1050px; margin: 20px auto; background: var(--card-bg); padding: 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
-        h1 { text-align: center; color: var(--primary); font-size: 1.8rem; margin-bottom: 20px; }
+        h1 { text-align: center; color: var(--primary); font-size: 1.8rem; margin-bottom: 20px; letter-spacing: 1px; }
         
+        /* 座位表配置 */
         .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 10px; padding: 25px; background: #f1f5f9; border-radius: 20px; justify-content: center; }
         .seat { background: white; border: 2px solid transparent; border-radius: 12px; padding: 10px 5px; text-align: center; min-height: 90px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
+        
         .seat.present { background: #ecfdf5; border-color: #a7f3d0; }
         .seat.absent { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
         .seat.is-manual { border-color: var(--highlight); }
         .seat.is-manual::after { content: '🔒'; position: absolute; top: -5px; right: -5px; font-size: 0.8rem; background: white; border-radius: 50%; padding: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
         .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.4; }
         
-        .header-box { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 12px; }
+        /* 控制面板 */
+        .header-box { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
         .footer-controls { margin-top: 25px; display: flex; justify-content: center; gap: 12px; }
-        button { border: none; border-radius: 10px; font-weight: bold; cursor: pointer; padding: 12px 20px; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; }
+        button { border: none; border-radius: 10px; font-weight: bold; cursor: pointer; padding: 12px 22px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; transition: 0.2s; }
+        button:hover { filter: brightness(0.9); transform: translateY(-1px); }
+        
         .btn-shuffle { background: var(--purple); color: white; }
         .btn-edit { background: var(--highlight); color: white; }
-        .btn-edit.active { background: var(--primary); outline: 3px solid rgba(59, 130, 246, 0.3); }
+        .btn-edit.active { background: var(--primary); outline: 4px solid rgba(59, 130, 246, 0.2); }
         
-        #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 8px; opacity: 0; transition: 0.3s; z-index: 1000; }
+        #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: 0.3s; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         #toast.show { opacity: 1; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 v4.5</h1>
+    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v4.6 靈活群組版</span></h1>
 
     <div class="header-box">
-        <select id="subject" style="padding:10px; border-radius:8px;"><option>西班牙文</option><option>音樂</option><option>電腦</option></select>
-        <div style="text-align:center;">出席: <b id="count-p" style="color:var(--success)">0</b></div>
-        <div style="text-align:center;">缺席: <b id="count-a" style="color:var(--danger)">0</b></div>
+        <select id="subject" style="padding:10px; border-radius:8px; border:1px solid var(--border); font-weight:bold;">
+            <option>西班牙文</option><option>音樂</option><option>電腦</option>
+        </select>
+        <div style="text-align:center; font-weight:bold;">出席: <span id="count-p" style="color:var(--success); font-size:1.2rem;">0</span></div>
+        <div style="text-align:center; font-weight:bold;">缺席: <span id="count-a" style="color:var(--danger); font-size:1.2rem;">0</span></div>
         <button onclick="exportResult()" style="background:var(--primary); color:white;">📋 複製報表</button>
     </div>
 
     <div id="seating-grid" class="seating-chart"></div>
 
     <div class="footer-controls">
-        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定</button>
-        <button class="btn-shuffle" onclick="shuffleLogic()">🔀 隨機打亂 (三組磁鐵規則)</button>
-        <button onclick="resetAttendance()" style="background:#e2e8f0; color:var(--primary);">🧹 清除今日點名</button>
+        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定位置</button>
+        <button class="btn-shuffle" onclick="shuffleLogic()">🔀 隨機打亂 (內部位置隨機)</button>
+        <button onclick="resetAttendance()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 重置今日點名</button>
     </div>
 </div>
 
 <div id="toast">提示訊息</div>
 
 <script>
+    // 原始名單 (資料保持不變)
     const rawData = [
         {pos:"1-7", id:"1114300146", ch:"李婕禕"}, {pos:"2-7", id:"1114300501", ch:"賈伯珍"}, {pos:"3-7", id:"1114300174", ch:"蔡悅琳"}, {pos:"4-7", id:"1114300137", ch:"賴瑾安"}, {pos:"5-7", id:"1114300154", ch:"張鈺婕"}, {pos:"6-7", id:"1114300165", ch:"趙于嫻"}, {pos:"7-7", id:"1114300141", ch:"林紫騏"}, {pos:"8-7", id:"1114300173", ch:"黃毓霏"},
         {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾"},
@@ -92,7 +100,7 @@
             else {
                 const isFixed = manualFixedIds.includes(s.id);
                 seat.className = `seat ${attendance[s.id] !== false ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
-                seat.innerHTML = `<small>${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
+                seat.innerHTML = `<small style="color:#94a3b8">${s.pos}</small><b>${s.id.slice(-3)}</b><span style="font-weight:600">${s.ch}</span>`;
                 seat.onclick = () => {
                     if (isChangingMode) {
                         if(isFixed) manualFixedIds = manualFixedIds.filter(id => id !== s.id);
@@ -109,10 +117,9 @@
     }
 
     function shuffleLogic() {
-        // 設定磁鐵名單
         const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
-        const groupPair1 = ["1114300124", "1114300136"];
-        const groupPair2 = ["1114300126", "1114300502"]; // 新加入的組
+        const pairA = ["1114300124", "1114300136"];
+        const pairB = ["1114300126", "1114300502"];
         
         let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id));
         let freeIndices = [];
@@ -124,9 +131,10 @@
             finalMap[idx] = currentLayout.find(s => s.id === id);
         });
 
-        const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
+        // 隨機洗牌工具
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
 
-        // 1. 處理四人幫
+        // 1. 處理四人幫 (內部隨機排列)
         const fInPool = pool.filter(s => groupFour.includes(s.id));
         if (fInPool.length === 4) {
             let blocks = [];
@@ -138,7 +146,8 @@
             }
             if (blocks.length > 0) {
                 const b = blocks[Math.floor(Math.random() * blocks.length)];
-                shuffleArr(fInPool).forEach((s, i) => {
+                const randomizedFour = shuffle([...fInPool]); // 關鍵：內部隨機
+                randomizedFour.forEach((s, i) => {
                     finalMap[b[i]] = s;
                     freeIndices = freeIndices.filter(idx => idx !== b[i]);
                     pool = pool.filter(p => p.id !== s.id);
@@ -146,8 +155,8 @@
             }
         }
 
-        // 2. 處理兩對二人組
-        [groupPair1, groupPair2].forEach(pairIds => {
+        // 2. 處理兩組二人組 (內部隨機左右)
+        [pairA, pairB].forEach(pairIds => {
             const pInPool = pool.filter(s => pairIds.includes(s.id));
             if (pInPool.length === 2) {
                 let pairs = [];
@@ -156,7 +165,8 @@
                 }
                 if (pairs.length > 0) {
                     const p = pairs[Math.floor(Math.random() * pairs.length)];
-                    shuffleArr(pInPool).forEach((s, i) => {
+                    const randomizedPair = shuffle([...pInPool]); // 關鍵：內部隨機左右
+                    randomizedPair.forEach((s, i) => {
                         finalMap[p[i]] = s;
                         freeIndices = freeIndices.filter(idx => idx !== p[i]);
                         pool = pool.filter(item => item.id !== s.id);
@@ -165,16 +175,16 @@
             }
         });
 
-        // 3. 剩下隨機
-        shuffleArr(pool);
-        freeIndices.forEach((idx, i) => { finalMap[idx] = pool[i]; });
+        // 3. 剩餘人員隨機填充
+        const remainingStudents = shuffle([...pool]);
+        freeIndices.forEach((idx, i) => { finalMap[idx] = remainingStudents[i]; });
 
         currentLayout = currentLayout.map((s, i) => {
             if (s.id === 'empty') return s;
             return { ...finalMap[i], pos: s.pos };
         });
 
-        save(); renderGrid(); showToast("三組特定對象已成功安置！");
+        save(); renderGrid(); showToast("大風吹完成！群組內部已重新洗牌。");
     }
 
     function save() {
@@ -182,21 +192,18 @@
         localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout));
         localStorage.setItem('xe60c_fixed', JSON.stringify(manualFixedIds));
     }
-
     function updateUI() {
         const p = Object.values(attendance).filter(v => v !== false).length;
         document.getElementById('count-p').innerText = p;
         document.getElementById('count-a').innerText = 55 - p;
     }
-
     function resetAttendance() {
-        if(confirm("重置今日點名？")) { attendance = {}; save(); renderGrid(); updateUI(); }
+        if(confirm("確定要重置今日的點名紀錄嗎？")) { attendance = {}; save(); renderGrid(); updateUI(); }
     }
-
     function exportResult() {
         const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
         navigator.clipboard.writeText("缺席名單：" + (list.join(', ') || '全員出席'));
-        showToast("報表已複製");
+        showToast("缺席報表已複製到剪貼簿");
     }
 
     init();
