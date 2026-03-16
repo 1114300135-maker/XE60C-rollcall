@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧點名排座系統 v4.1</title>
+    <title>XE60C 智慧點名排座 v4.2</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -21,54 +21,43 @@
         .stat-value { font-size: 1.8rem; font-weight: 800; display: block; line-height: 1.2; }
         
         select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 1rem; background: white; outline: none; transition: 0.2s; }
-        select:focus { border-color: var(--highlight); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
 
         .save-manager { background: var(--bg); padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid var(--border); }
         .save-input-group { display: flex; gap: 12px; margin-bottom: 15px; }
         .save-input-group input { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: var(--highlight); font-size: 1rem; outline: none; }
-        .save-input-group input:focus { border-color: var(--highlight); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
         .save-list { display: flex; gap: 10px; flex-wrap: wrap; }
-        .save-tag { background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .save-tag:hover { border-color: var(--highlight); color: var(--highlight); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); }
-        .save-tag .del-btn { color: #94a3b8; font-weight: bold; font-size: 1.2rem; line-height: 1; }
-        .save-tag .del-btn:hover { color: var(--danger); transform: scale(1.2); }
+        .save-tag { background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .save-tag:hover { border-color: var(--highlight); color: var(--highlight); transform: translateY(-2px); }
 
         .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 12px; padding: 30px; background: #f1f5f9; border-radius: 20px; justify-content: center; border: 1px solid var(--border); }
-        .seat { background: white; border: 2px solid transparent; border-radius: 14px; padding: 12px 5px; text-align: center; min-height: 95px; position: relative; transition: all 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .seat:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.05); }
+        .seat { background: white; border: 2px solid transparent; border-radius: 14px; padding: 12px 5px; text-align: center; min-height: 95px; position: relative; transition: all 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
         
         .seat.present { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
         .seat.absent { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
         
-        .seat.is-manual::after { content: '🔒'; position: absolute; top: -8px; right: -8px; font-size: 1rem; background: white; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 2px; }
+        .seat.is-manual::after { content: '🔒'; position: absolute; top: -8px; right: -8px; font-size: 1rem; background: white; border-radius: 50%; padding: 2px; }
         .seat.is-manual { border-color: var(--highlight); }
 
-        body.is-changing .seat:not(.empty) { outline: 2px dashed var(--highlight); outline-offset: 2px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-
-        .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.5; pointer-events: none; box-shadow: none; }
+        .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.5; pointer-events: none; }
 
         .footer-controls { margin-top: 30px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid var(--border); padding-top: 30px; }
-        button { border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.2s; padding: 14px 28px; display: flex; align-items: center; gap: 8px; justify-content: center; }
-        button:hover { filter: brightness(1.1); transform: translateY(-1px); }
-        button:active { transform: translateY(1px); }
+        button { border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; padding: 14px 28px; display: flex; align-items: center; gap: 8px; }
         
         .btn-edit { background: var(--highlight); color: white; }
-        .btn-edit.active { background: var(--primary); box-shadow: inset 0 3px 6px rgba(0,0,0,0.2); }
+        .btn-edit.active { background: var(--primary); }
         .btn-shuffle { background: var(--purple); color: white; }
 
-        #picker-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.4); z-index:100; justify-content:center; align-items:center; backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.2s; }
-        #picker-overlay.show { display: flex; opacity: 1; }
-        .picker-content { background:white; padding:30px; border-radius:24px; width:650px; max-height:85vh; display:flex; flex-direction:column; box-shadow: 0 25px 50px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        #picker-overlay.show .picker-content { transform: translateY(0); }
+        #picker-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.4); z-index:100; justify-content:center; align-items:center; backdrop-filter: blur(8px); }
+        #picker-overlay.show { display: flex; }
+        .picker-content { background:white; padding:30px; border-radius:24px; width:650px; display:flex; flex-direction:column; }
         
-        #picker-search { width: 100%; padding: 16px; border-radius: 12px; border: 2px solid var(--border); font-size: 1.1rem; outline: none; margin-top: 15px; transition: 0.2s; box-sizing: border-box; }
-        #picker-search:focus { border-color: var(--highlight); }
-        .picker-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; overflow-y:auto; margin-top: 20px; padding-right: 5px; }
-        .picker-item { padding:12px; border:1px solid var(--border); border-radius:10px; cursor:pointer; text-align:center; font-size:0.9rem; font-weight: 600; background: var(--bg); transition: 0.2s; }
-        .picker-item:hover, .picker-item.selected { background: var(--highlight); color:white; border-color: var(--highlight); }
+        #picker-search { width: 100%; padding: 16px; border-radius: 12px; border: 2px solid var(--border); font-size: 1.1rem; outline: none; margin-top: 15px; }
+        .picker-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; overflow-y:auto; margin-top: 20px; }
+        .picker-item { padding:12px; border: 1px solid var(--border); border-radius:10px; cursor:pointer; text-align:center; font-size:0.9rem; background: var(--bg); }
+        .picker-item:hover { background: var(--highlight); color:white; }
 
-        #toast { position: fixed; bottom: 30px; right: 30px; background: #1e293b; color: white; padding: 14px 24px; border-radius: 12px; font-weight: bold; font-size: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1000; display: flex; align-items: center; gap: 8px; }
+        #toast { position: fixed; bottom: 30px; right: 30px; background: #1e293b; color: white; padding: 14px 24px; border-radius: 12px; font-weight: bold; transform: translateY(100px); opacity: 0; transition: 0.3s; z-index: 1000; }
         #toast.show { transform: translateY(0); opacity: 1; }
     </style>
 </head>
@@ -79,18 +68,14 @@
 
     <div class="save-manager">
         <div class="save-input-group">
-            <input type="text" id="save-name" placeholder="佈局名稱 (如: 05-20 段考座位)" autocomplete="off">
-            <button onclick="saveCurrentLayout()" style="background:var(--success); color:white;">💾 保存此佈局</button>
+            <input type="text" id="save-name" placeholder="佈局名稱" autocomplete="off">
+            <button onclick="saveCurrentLayout()" style="background:var(--success); color:white;">💾 保存佈局</button>
         </div>
         <div id="save-list" class="save-list"></div>
     </div>
 
     <div class="header-box">
-        <div>
-            <select id="subject">
-                <option>西班牙文</option><option>音樂</option><option>電腦</option>
-            </select>
-        </div>
+        <div><select id="subject"><option>西班牙文</option><option>音樂</option><option>電腦</option></select></div>
         <div class="stat-card"><span id="count-p" class="stat-value" style="color:var(--success)">0</span>出席</div>
         <div class="stat-card"><span id="count-a" class="stat-value" style="color:var(--danger)">0</span>缺席</div>
         <button style="background:var(--primary); color:white;" onclick="exportResult()">📋 複製報表</button>
@@ -99,23 +84,17 @@
     <div id="seating-grid" class="seating-chart"></div>
 
     <div class="footer-controls">
-        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動指定學生</button>
-        <button class="btn-shuffle" onclick="shuffleUnfixed()">🔀 打亂未鎖定座位</button>
-        <button class="btn-reset" onclick="resetAttendance()" style="background:#f1f5f9; color:#64748b;">🧹 清除今日點名</button>
+        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動指定</button>
+        <button class="btn-shuffle" onclick="shuffleUnfixed()">🔀 打亂座位</button>
+        <button onclick="resetAttendance()" style="background:#f1f5f9; color:#64748b;">🧹 清除點名</button>
     </div>
 </div>
 
-<div id="picker-overlay">
-    <div class="picker-content">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0; color: var(--primary);">快速搜尋學生</h3>
-            <button onclick="closePicker()" style="background:none; font-size:1.8rem; padding:0; color:#94a3b8; height:auto;">&times;</button>
-        </div>
-        <input type="text" id="picker-search" placeholder="輸入學號後三碼或姓名..." autocomplete="off">
-        <div class="picker-grid" id="student-picker-list"></div>
-    </div>
-</div>
-
+<div id="picker-overlay"><div class="picker-content">
+    <div style="display:flex; justify-content:space-between;"><h3>快速搜尋</h3><button onclick="closePicker()" style="background:none; font-size:1.8rem;">&times;</button></div>
+    <input type="text" id="picker-search" placeholder="輸入學號後三碼或姓名..." autocomplete="off">
+    <div class="picker-grid" id="student-picker-list"></div>
+</div></div>
 <div id="toast">✅ 提示訊息</div>
 
 <script>
@@ -135,196 +114,173 @@
     let savedLayouts = JSON.parse(localStorage.getItem('xe60c_library')) || {};
     let isChangingMode = false;
     let pickingIdx = null;
-    let toastTimeout;
 
-    function showToast(msg, icon = '✅') {
+    function showToast(msg) {
         const toast = document.getElementById('toast');
-        toast.innerHTML = `${icon} ${msg}`;
-        toast.classList.add('show');
-        clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => toast.classList.remove('show'), 2500);
+        toast.innerText = msg; toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
-    function init() { renderGrid(); renderSaveList(); updateUI(); setDefaultDate(); }
-
-    function setDefaultDate() {
-        const d = new Date();
-        document.getElementById('save-name').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
+    function init() { renderGrid(); renderSaveList(); updateUI(); }
 
     function saveCurrentLayout() {
         const name = document.getElementById('save-name').value.trim();
-        if (!name) { showToast("請輸入佈局名稱！", "⚠️"); return; }
+        if (!name) return showToast("請輸入名稱");
         savedLayouts[name] = { layout: JSON.parse(JSON.stringify(currentLayout)), fixed: [...manualFixedIds] };
         localStorage.setItem('xe60c_library', JSON.stringify(savedLayouts));
-        renderSaveList();
-        showToast(`佈局「${name}」已保存！`);
+        renderSaveList(); showToast("已保存佈局");
     }
 
     function renderSaveList() {
-        const listEl = document.getElementById('save-list');
-        listEl.innerHTML = '';
+        const listEl = document.getElementById('save-list'); listEl.innerHTML = '';
         Object.keys(savedLayouts).sort().reverse().forEach(name => {
-            const tag = document.createElement('div');
-            tag.className = 'save-tag';
-            tag.innerHTML = `<span>${name}</span><span class="del-btn" onclick="deleteLayout('${name}', event)">&times;</span>`;
-            tag.onclick = () => loadLayout(name);
+            const tag = document.createElement('div'); tag.className = 'save-tag';
+            tag.innerHTML = `<span>${name}</span><span onclick="deleteLayout('${name}', event)">&times;</span>`;
+            tag.onclick = () => {
+                currentLayout = JSON.parse(JSON.stringify(savedLayouts[name].layout));
+                manualFixedIds = [...savedLayouts[name].fixed];
+                save(); renderGrid(); showToast("載入成功");
+            };
             listEl.appendChild(tag);
         });
     }
 
-    function loadLayout(name) {
-        if (!confirm(`確定要切換至「${name}」的座位表嗎？`)) return;
-        const data = savedLayouts[name];
-        currentLayout = JSON.parse(JSON.stringify(data.layout));
-        manualFixedIds = [...data.fixed];
-        save(); renderGrid();
-        showToast(`已載入「${name}」`);
-    }
-
     function deleteLayout(name, e) {
-        e.stopPropagation();
-        if (!confirm(`確定要刪除「${name}」的紀錄嗎？`)) return;
-        delete savedLayouts[name];
-        localStorage.setItem('xe60c_library', JSON.stringify(savedLayouts));
-        renderSaveList();
-        showToast(`已刪除「${name}」`, "🗑️");
+        e.stopPropagation(); delete savedLayouts[name];
+        localStorage.setItem('xe60c_library', JSON.stringify(savedLayouts)); renderSaveList();
     }
 
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
-        document.body.classList.toggle('is-changing', isChangingMode);
-        const btn = document.getElementById('btn-change-mode');
-        btn.innerHTML = isChangingMode ? "✅ 完成指定並鎖定" : "👤 手動指定學生";
-        btn.classList.toggle('active', isChangingMode);
-        if(!isChangingMode) showToast("已鎖定手動指定座位", "🔒");
+        document.getElementById('btn-change-mode').classList.toggle('active', isChangingMode);
     }
 
     function renderGrid() {
-        const grid = document.getElementById('seating-grid');
-        grid.innerHTML = '';
+        const grid = document.getElementById('seating-grid'); grid.innerHTML = '';
         currentLayout.forEach((s, i) => {
             const seat = document.createElement('div');
             if (s.id === 'empty') {
-                seat.className = 'seat empty';
-                seat.innerHTML = `<span style="font-size:0.6rem;">${s.pos}</span><br>EMPTY`;
+                seat.className = 'seat empty'; seat.innerText = "EMPTY";
             } else {
-                if(attendance[s.id] === undefined) attendance[s.id] = true;
                 const isFixed = manualFixedIds.includes(s.id);
-                seat.className = `seat ${attendance[s.id] ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
-                seat.innerHTML = `<span style="font-size:0.55rem; opacity:0.6;">${s.pos}</span><b style="font-size:1.2rem; margin:2px 0;">${s.id.slice(-3)}</b><span style="font-size:0.85rem; font-weight:600;">${s.ch}</span>`;
-                seat.onclick = () => { 
-                    if (isChangingMode) openPicker(i); 
-                    else { attendance[s.id] = !attendance[s.id]; save(); renderGrid(); updateUI(); } 
+                seat.className = `seat ${attendance[s.id] !== false ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
+                seat.innerHTML = `<small>${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
+                seat.onclick = () => {
+                    if (isChangingMode) openPicker(i);
+                    else { attendance[s.id] = !attendance[s.id]; save(); renderGrid(); updateUI(); }
                 };
             }
             grid.appendChild(seat);
-            if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) grid.appendChild(document.createElement('div')).className='gap-column';
+            if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) {
+                let gap = document.createElement('div'); gap.style.width = '40px'; grid.appendChild(gap);
+            }
         });
     }
 
     function openPicker(idx) {
-        pickingIdx = idx;
-        const searchInput = document.getElementById('picker-search');
-        searchInput.value = '';
-        const overlay = document.getElementById('picker-overlay');
-        overlay.classList.add('show');
-        setTimeout(() => searchInput.focus(), 100);
+        pickingIdx = idx; document.getElementById('picker-overlay').classList.add('show');
         updatePickerList('');
     }
 
     function updatePickerList(keyword) {
-        const listEl = document.getElementById('student-picker-list');
-        listEl.innerHTML = '';
-        const all = rawData.filter(s => s.id !== 'empty').sort((a,b) => a.id.localeCompare(b.id));
-        const filtered = all.filter(s => s.id.includes(keyword) || s.ch.includes(keyword));
-        filtered.forEach((st, idx) => {
-            const item = document.createElement('div');
-            item.className = 'picker-item' + (idx === 0 && keyword !== '' ? ' selected' : '');
+        const listEl = document.getElementById('student-picker-list'); listEl.innerHTML = '';
+        rawData.filter(s => s.id !== 'empty' && (s.id.includes(keyword) || s.ch.includes(keyword))).forEach(st => {
+            const item = document.createElement('div'); item.className = 'picker-item';
             item.innerText = `${st.id.slice(-3)} ${st.ch}`;
-            item.onclick = () => pickStudent(st);
+            item.onclick = () => {
+                const oldStudent = currentLayout[pickingIdx];
+                const targetIdx = currentLayout.findIndex(s => s.id === st.id);
+                if(targetIdx !== -1) currentLayout[targetIdx] = { ...oldStudent, pos: currentLayout[targetIdx].pos };
+                currentLayout[pickingIdx] = { ...st, pos: oldStudent.pos };
+                if(!manualFixedIds.includes(st.id)) manualFixedIds.push(st.id);
+                save(); closePicker(); renderGrid();
+            };
             listEl.appendChild(item);
         });
     }
-
     document.getElementById('picker-search').oninput = (e) => updatePickerList(e.target.value);
-    document.getElementById('picker-search').onkeydown = (e) => {
-        if(e.key === 'Enter') {
-            const keyword = e.target.value;
-            const target = rawData.filter(s => s.id !== 'empty').find(s => s.id.includes(keyword) || s.ch.includes(keyword));
-            if(target) pickStudent(target);
-        }
-        if(e.key === 'Escape') closePicker();
-    };
-
-    function pickStudent(newStudent) {
-        const oldStudent = currentLayout[pickingIdx];
-        const oldPosIdx = currentLayout.findIndex(s => s.id === newStudent.id);
-        if(oldPosIdx !== -1) currentLayout[oldPosIdx] = { ...oldStudent, pos: currentLayout[oldPosIdx].pos };
-        currentLayout[pickingIdx] = { ...newStudent, pos: oldStudent.pos };
-        if(!manualFixedIds.includes(newStudent.id)) manualFixedIds.push(newStudent.id);
-        save(); closePicker(); renderGrid();
-    }
-
     function closePicker() { document.getElementById('picker-overlay').classList.remove('show'); }
 
-    // ====== 核心：包含「綁定好朋友」的洗牌邏輯 ======
+    // ====== 穩定版綁定邏輯 ======
     function shuffleUnfixed() {
-        if(isChangingMode) { showToast("請先點擊「完成指定」再打亂", "⚠️"); return; }
-        
-        // 設定綁定好朋友的 ID
         const b1 = "1114300136"; // 曾安岑
         const b2 = "1114300124"; // 林沁榆
         
-        let newAssignments = {};
-        let unfixedIndices = [];
-        
-        // 找出所有可以被打亂的空位 (沒有被鎖定且非 empty)
-        currentLayout.forEach((cell, idx) => {
-            if (cell.id !== 'empty' && !manualFixedIds.includes(cell.id)) {
-                unfixedIndices.push(idx);
-            }
+        let poolStudents = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id));
+        let freeSeatsIndices = [];
+        currentLayout.forEach((s, i) => { if(s.id !== 'empty' && !manualFixedIds.includes(s.id)) freeSeatsIndices.push(i); });
+
+        let finalMap = new Array(currentLayout.length).fill(null);
+
+        // 1. 處理鎖定者的位置
+        manualFixedIds.forEach(id => {
+            const idx = currentLayout.findIndex(s => s.id === id);
+            finalMap[idx] = currentLayout[idx];
         });
 
-        // 取出要洗牌的學生池
-        let pool = currentLayout.filter((cell, idx) => unfixedIndices.includes(idx));
+        // 2. 處理綁定邏輯
+        const b1InPool = poolStudents.find(s => s.id === b1);
+        const b2InPool = poolStudents.find(s => s.id === b2);
 
-        function reserveSeat(studentId, targetIdx) {
-            if (unfixedIndices.includes(targetIdx)) {
-                let student = pool.find(s => s.id === studentId);
-                if (student) {
-                    newAssignments[targetIdx] = student;
-                    unfixedIndices = unfixedIndices.filter(i => i !== targetIdx);
-                    pool = pool.filter(s => s.id !== studentId);
-                    return true;
+        if (b1InPool && b2InPool) {
+            // 找可用的相鄰對 (偶數+奇數 且 都在 freeSeatsIndices)
+            let pairs = [];
+            for (let i = 0; i < currentLayout.length; i++) {
+                if (i % 2 === 0 && freeSeatsIndices.includes(i) && freeSeatsIndices.includes(i+1)) {
+                    pairs.push([i, i+1]);
                 }
             }
-            return false;
+            if (pairs.length > 0) {
+                const pair = pairs[Math.floor(Math.random() * pairs.length)];
+                finalMap[pair[0]] = b1InPool; finalMap[pair[1]] = b2InPool;
+                poolStudents = poolStudents.filter(s => s.id !== b1 && s.id !== b2);
+                freeSeatsIndices = freeSeatsIndices.filter(i => i !== pair[0] && i !== pair[1]);
+            }
+        } else if (b1InPool || b2InPool) {
+            // 其中一個被鎖定，另一個在 Pool 裡
+            const fixedId = manualFixedIds.includes(b1) ? b1 : b2;
+            const movingId = fixedId === b1 ? b2 : b1;
+            const fixedIdx = currentLayout.findIndex(s => s.id === fixedId);
+            const targetIdx = fixedIdx % 2 === 0 ? fixedIdx + 1 : fixedIdx - 1;
+            
+            if (freeSeatsIndices.includes(targetIdx)) {
+                finalMap[targetIdx] = poolStudents.find(s => s.id === movingId);
+                poolStudents = poolStudents.filter(s => s.id !== movingId);
+                freeSeatsIndices = freeSeatsIndices.filter(i => i !== targetIdx);
+            }
         }
 
-        // 檢查兩人的鎖定狀態
-        let b1Fixed = manualFixedIds.includes(b1);
-        let b2Fixed = manualFixedIds.includes(b2);
+        // 3. 剩下的人亂數填充
+        poolStudents.sort(() => Math.random() - 0.5);
+        freeSeatsIndices.forEach((seatIdx, i) => {
+            finalMap[seatIdx] = poolStudents[i];
+        });
 
-        // 情境 A：其中一人被手動鎖定，嘗試把另一個拉到旁邊 (索引相連，且偶數在前)
-        if (b1Fixed && !b2Fixed) {
-            let b1Idx = currentLayout.findIndex(s => s.id === b1);
-            let targetIdx = b1Idx % 2 === 0 ? b1Idx + 1 : b1Idx - 1;
-            reserveSeat(b2, targetIdx);
-        } 
-        else if (b2Fixed && !b1Fixed) {
-            let b2Idx = currentLayout.findIndex(s => s.id === b2);
-            let targetIdx = b2Idx % 2 === 0 ? b2Idx + 1 : b2Idx - 1;
-            reserveSeat(b1, targetIdx);
-        } 
-        // 情境 B：兩人都自由，為他們隨機找一對相鄰座位
-        else if (!b1Fixed && !b2Fixed && pool.some(s => s.id === b1) && pool.some(s => s.id === b2)) {
-            let availablePairs = [];
-            for(let i = 0; i < unfixedIndices.length; i++) {
-                let idx1 = unfixedIndices[i];
-                if (idx1 % 2 === 0 && unfixedIndices.includes(idx1 + 1)) {
-                    availablePairs.push([idx1, idx1 + 1]);
-                }
-            }
-            if (availablePairs.length > 0) {
-                let chosenPair = availablePairs[Math.floor(Math.random() * av
+        // 4. 套用位置與空位
+        currentLayout = currentLayout.map((s, i) => {
+            if (s.id === 'empty') return s;
+            return { ...finalMap[i], pos: s.pos };
+        });
+
+        save(); renderGrid(); showToast("打亂完成");
+    }
+
+    function updateUI() {
+        const p = Object.values(attendance).filter(v => v !== false).length;
+        document.getElementById('count-p').innerText = p;
+        document.getElementById('count-a').innerText = 55 - p;
+    }
+    function save() {
+        localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout));
+        localStorage.setItem('xe60c_fixed', JSON.stringify(manualFixedIds));
+    }
+    function resetAttendance() { attendance = {}; renderGrid(); updateUI(); }
+    function exportResult() {
+        const list = rawData.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
+        navigator.clipboard.writeText("缺席：" + (list.join(', ') || '全員出席'));
+        showToast("已複製報表");
+    }
+    init();
+</script>
+</body>
+</html>
