@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧點名系統 v3.6</title>
+    <title>XE60C 智慧點名系統 v3.7</title>
     <style>
         :root { 
             --primary: #475569; --success: #10b981; --danger: #ef4444; 
@@ -12,13 +12,10 @@
         }
         
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
-        .container { width: 1050px; margin: 30px auto; background: var(--card-bg); padding: 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); }
+        .container { width: 1050px; margin: 20px auto; background: var(--card-bg); padding: 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); }
 
-        .header-box { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 20px; align-items: center; background: #f8fafc; padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
-        .stat-card { text-align: center; border-left: 1px solid #e2e8f0; }
-        .stat-value { font-size: 1.6rem; font-weight: 800; display: block; }
-
-        .save-manager { background: #f1f5f9; padding: 15px 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        /* 佈局保存管理 */
+        .save-manager { background: #f1f5f9; padding: 15px 25px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
         .save-input-group { display: flex; gap: 10px; margin-bottom: 10px; }
         .save-list { display: flex; gap: 8px; flex-wrap: wrap; }
         .save-tag { background: white; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 10px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
@@ -26,6 +23,11 @@
         .save-tag .del-btn { color: #94a3b8; font-weight: bold; cursor: pointer; font-size: 1.2rem; }
         .save-tag .del-btn:hover { color: var(--danger); }
 
+        .header-box { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 20px; align-items: center; background: #f8fafc; padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .stat-card { text-align: center; border-left: 1px solid #e2e8f0; }
+        .stat-value { font-size: 1.6rem; font-weight: 800; display: block; }
+
+        /* 座位圖區域 */
         .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 12px; padding: 25px; background: #f1f5f9; border-radius: 20px; justify-content: center; }
         .seat { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 5px; text-align: center; min-height: 95px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
         
@@ -37,14 +39,14 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
         .seat.empty { background: #e2e8f0; border: 1px dashed #cbd5e1; cursor: default; opacity: 0.4; pointer-events: none; }
-        .screen { width: 450px; margin: 0 auto 20px; background: var(--primary); color: white; text-align: center; padding: 10px; border-radius: 0 0 40px 40px; font-weight: 700; letter-spacing: 8px; font-size: 0.8rem; }
 
-        .footer-controls { margin-top: 30px; display: flex; justify-content: center; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 25px; }
+        .footer-controls { margin-top: 25px; display: flex; justify-content: center; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 25px; }
         button { border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; padding: 12px 24px; }
         .btn-edit { background: var(--highlight); color: white; }
         .btn-edit.active { background: #1e293b; }
         .btn-shuffle { background: var(--purple); color: white; }
 
+        /* 彈窗 */
         #picker-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:100; justify-content:center; align-items:center; backdrop-filter: blur(4px); }
         .picker-content { background:white; padding:30px; border-radius:24px; width:650px; max-height:85vh; display:flex; flex-direction:column; }
         #picker-search { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1.1rem; outline: none; margin-top: 15px; }
@@ -56,7 +58,7 @@
 <body>
 
 <div class="container">
-    <header style="text-align:center; margin-bottom:20px;">
+    <header style="text-align:center; margin-bottom:15px;">
         <h1 style="margin:0; color:var(--primary);">XE60C 智慧點名排座</h1>
     </header>
 
@@ -79,7 +81,6 @@
         <button style="background:var(--primary); color:white;" onclick="exportResult()">📋 複製報表</button>
     </div>
 
-    <div class="screen">SCREEN</div>
     <div id="seating-grid" class="seating-chart"></div>
 
     <div class="footer-controls">
@@ -95,7 +96,7 @@
             <h3 style="margin:0">快速搜尋學生</h3>
             <button onclick="closePicker()" style="background:none; font-size:1.5rem;">&times;</button>
         </div>
-        <input type="text" id="picker-search" placeholder="輸入學號後三碼..." autocomplete="off">
+        <input type="text" id="picker-search" placeholder="輸入學號後三碼或姓名..." autocomplete="off">
         <div class="picker-grid" id="student-picker-list"></div>
     </div>
 </div>
@@ -122,10 +123,9 @@
         renderGrid(); 
         renderSaveList(); 
         updateUI(); 
-        setDefaultDate(); // 初始化自動日期
+        setDefaultDate();
     }
 
-    // --- 日期與保存邏輯 ---
     function setDefaultDate() {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -143,7 +143,7 @@
         };
         localStorage.setItem('xe60c_library', JSON.stringify(savedLayouts));
         renderSaveList();
-        alert(`佈局「${name}」已保存成功！`);
+        alert(`佈局「${name}」已保存！`);
     }
 
     function renderSaveList() {
@@ -174,7 +174,6 @@
         renderSaveList();
     }
 
-    // --- 核心座位邏輯 ---
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
         document.body.classList.toggle('is-changing', isChangingMode);
@@ -277,7 +276,7 @@
         localStorage.setItem('xe60c_fixed', JSON.stringify(manualFixedIds));
     }
 
-    function resetAll() { if(confirm('重置所有資料與存檔？')) { localStorage.clear(); location.reload(); } }
+    function resetAll() { if(confirm('要重置所有資料與存檔嗎？')) { localStorage.clear(); location.reload(); } }
 
     function exportResult() {
         const sorted = rawData.filter(s => s.id !== 'empty').sort((a,b) => a.id.localeCompare(b.id));
