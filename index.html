@@ -3,88 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧點名系統 v2.2 (含預選鎖定)</title>
+    <title>XE60C 智慧點名系統 v2.2b</title>
     <style>
         :root { 
             --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; 
             --bg: #f0f2f5; --highlight: #3498db; --card-bg: #ffffff; --purple: #8e44ad; --lock: #f39c12;
         }
-        
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 0; }
         .container { width: 1000px; margin: 20px auto; background: var(--card-bg); padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-
         .tab-nav { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
         .tab-btn { padding: 12px 30px; cursor: pointer; border: none; background: none; font-size: 1.1rem; color: #7f8c8d; transition: 0.3s; font-weight: bold; }
         .tab-btn.active { color: var(--highlight); border-bottom: 3px solid var(--highlight); margin-bottom: -2px; }
-
         .header-box { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #eee; }
-        .stat-item { font-weight: bold; font-size: 1.1rem; }
-
         .page { display: none; }
         .page.active { display: block; }
-
         .seating-chart { 
             display: grid; grid-template-columns: repeat(2, 100px) 35px repeat(2, 100px) 35px repeat(2, 100px) 35px repeat(2, 100px); 
             gap: 10px; padding: 20px; background: #dfe4ea; border-radius: 10px; justify-content: center;
         }
         .seat { 
-            background: white; border: 2px solid #ccc; border-radius: 6px; padding: 8px 2px; text-align: center; min-height: 85px; 
+            background: white; border: 2px solid #ccc; border-radius: 6px; padding: 10px 2px; text-align: center; min-height: 85px; 
             position: relative; cursor: pointer; display: flex; flex-direction: column; justify-content: center; transition: 0.2s;
         }
         .seat.present { background: #e6fffa; border-color: var(--success); }
         .seat.absent { background: #fff5f5; border-color: var(--danger); }
-        .seat.locked { border: 2px solid var(--lock); box-shadow: 0 0 8px rgba(243, 156, 18, 0.4); }
+        .seat.locked { border: 2px solid var(--lock); box-shadow: 0 0 5px rgba(243, 156, 18, 0.3); }
         .seat.empty { background: #eee; border: 1px dashed #aaa; cursor: default; opacity: 0.5; pointer-events: none; }
-        
-        /* 鎖頭圖示 */
-        .lock-icon { 
-            position: absolute; top: 2px; right: 2px; font-size: 0.8rem; cursor: pointer;
-            background: #eee; border-radius: 50%; width: 18px; height: 18px; line-height: 18px; 
+        .lock-btn { 
+            position: absolute; top: 2px; right: 2px; font-size: 0.7rem; width: 20px; height: 20px; 
+            background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;
         }
-        .seat.locked .lock-icon { background: var(--lock); color: white; }
-
-        .screen { width: 400px; margin: 25px auto; background: #333; color: white; text-align: center; padding: 10px; border-radius: 0 0 20px 20px; font-weight: bold; letter-spacing: 5px; }
-        button { padding: 12px 24px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
-        .btn-shuffle { background: var(--purple); color: white; }
-        .btn-reset { background: #edf2f7; color: #4a5568; }
-        
-        .footer-controls { text-align: center; margin-top: 30px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-        .hint { font-size: 0.9rem; color: #7f8c8d; margin-top: 5px; }
+        .seat.locked .lock-btn { background: var(--lock); color: white; }
+        .footer-controls { text-align: center; margin-top: 30px; display: flex; justify-content: center; gap: 15px; }
+        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header style="text-align:center; margin-bottom:10px;"><h1>XE60C 智慧點名系統</h1></header>
+    <header style="text-align:center;"><h1>XE60C 智慧點名系統</h1></header>
 
     <div class="tab-nav">
-        <div class="tab-btn active" onclick="switchPage('grid', event)">🪑 座位圖/預選模式</div>
-        <div class="tab-btn" onclick="switchPage('focus', event)">🔢 座號導航模式</div>
+        <div class="tab-btn active" onclick="switchPage('grid', event)">🪑 座位模式</div>
+        <div class="tab-btn" onclick="switchPage('focus', event)">🔢 導航模式</div>
     </div>
 
     <div class="header-box">
-        <div>科目: <select id="subject" style="padding:5px;"><option>西班牙文</option><option>音樂</option><option>電腦</option></select></div>
-        <div class="stat-item" style="color:var(--success)">出席: <span id="count-p">0</span></div>
-        <div class="stat-item" style="color:var(--danger)">缺席: <span id="count-a">0</span></div>
-        <div><button style="background:var(--primary); color:white;" onclick="exportResult()">複製結果</button></div>
+        <div>科目: <select id="subject"><option>西班牙文</option><option>音樂</option><option>電腦</option></select></div>
+        <div style="color:var(--success)">出席: <span id="count-p">0</span></div>
+        <div style="color:var(--danger)">缺席: <span id="count-a">0</span></div>
+        <button style="background:var(--primary); color:white;" onclick="exportResult()">複製結果</button>
     </div>
 
     <div id="page-grid" class="page active">
         <div id="seating-grid" class="seating-chart"></div>
-        <div class="screen">投 影 幕</div>
-        <div style="text-align:center;" class="hint">💡 點擊右上角 🔒 可鎖定座位，打亂時鎖定的學生不會移動</div>
+        <p style="text-align:center; color:#7f8c8d; font-size:0.8rem;">提示：點擊右上角 🔓 鎖定座位，打亂時該生不動</p>
     </div>
 
     <div id="page-focus" class="page">
-        <div class="focus-container" style="text-align:center; padding:40px;">
-            <div id="focus-card-box" style="display:inline-block; border:3px solid var(--highlight); padding:30px; border-radius:20px; background:white;">
+        <div style="text-align:center; padding:40px;">
+            <div style="display:inline-block; border:3px solid var(--highlight); padding:30px; border-radius:20px; background:white;">
                 <div style="color:#718096;">座號：<span id="f-id">--</span></div>
                 <div id="f-name" style="font-size:3rem; font-weight:bold; margin:15px 0;">--</div>
                 <div id="f-status" style="font-weight:bold; margin-bottom:20px;">--</div>
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button style="background:var(--success); color:white;" onclick="step(true)">✓ 出席 (Enter)</button>
-                    <button style="background:var(--danger); color:white;" onclick="step(false)">✗ 缺席 (Space)</button>
-                </div>
+                <button style="background:var(--success); color:white;" onclick="step(true)">出席 (Enter)</button>
+                <button style="background:var(--danger); color:white;" onclick="step(false)">缺席 (Space)</button>
             </div>
             <div style="margin-top:20px;">
                 <button onclick="changeFocus(-1)">⬅ 上一位</button>
@@ -94,8 +77,8 @@
     </div>
 
     <div class="footer-controls">
-        <button class="btn-shuffle" onclick="shuffleSeats()">🔀 打亂其餘座位</button>
-        <button class="btn-reset" onclick="resetAll()">全部重設</button>
+        <button style="background:var(--purple); color:white;" onclick="shuffleSeats()">🔀 打亂其餘座位</button>
+        <button style="background:#edf2f7; color:#4a5568;" onclick="resetAll()">重設全部</button>
     </div>
 </div>
 
@@ -107,36 +90,22 @@
         {pos:"1-4", id:"1114300153", ch:"陳以婕"}, {pos:"2-4", id:"1114300167", ch:"柯品瑀"}, {pos:"3-4", id:"1114300158", ch:"陳琦涵"}, {pos:"4-4", id:"1114300147", ch:"李恩妮"}, {pos:"5-4", id:"1114300129", ch:"陳靜宜"}, {pos:"6-4", id:"1114300148", ch:"林金姵"}, {pos:"7-4", id:"1114300127", ch:"陳乙瑄"}, {pos:"8-4", id:"1114300143", ch:"許唯芯"},
         {pos:"1-3", id:"1114300161", ch:"張乙芹"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇"}, {pos:"4-3", id:"1114300139", ch:"辛俊文"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜"}, {pos:"8-3", id:"1114300172", ch:"廖靚薇"},
         {pos:"1-2", id:"1114300128", ch:"王溱妤"}, {pos:"2-2", id:"1114300134", ch:"江芯語"}, {pos:"3-2", id:"1114300502", ch:"鄭皓軒"}, {pos:"4-2", id:"1114300156", ch:"連子甯"}, {pos:"5-2", id:"1114300126", ch:"林奕帆"}, {pos:"6-2", id:"1114300152", ch:"牛昱翔"}, {pos:"7-2", id:"1114300135", ch:"陳世豪"}, {pos:"8-2", id:"1114300166", ch:"林宜樺"},
-        {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122",突餘容"}, {pos:"8-1", id:"empty", ch:"(空位)"}
+        {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", ch:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空位)"}
     ];
 
     let attendance = JSON.parse(localStorage.getItem('xe60c_v2')) || {};
     let currentLayout = JSON.parse(localStorage.getItem('xe60c_layout')) || [...rawData];
-    let lockedIds = JSON.parse(localStorage.getItem('xe60c_locks')) || []; // 儲存被鎖定的 ID
+    let lockedIds = JSON.parse(localStorage.getItem('xe60c_locks')) || [];
     let sortedList = rawData.filter(s => s.id !== 'empty').sort((a,b) => a.id.localeCompare(b.id));
     let focusIdx = 0;
 
-    function init() {
-        renderGrid();
-        updateUI();
-    }
+    function init() { renderGrid(); updateUI(); }
 
-    function switchPage(page, event) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`page-${page}`).classList.add('active');
-        event.currentTarget.classList.add('active');
-    }
-
-    function toggleLock(id, event) {
-        event.stopPropagation(); // 防止觸發點名狀態切換
-        if (lockedIds.includes(id)) {
-            lockedIds = lockedIds.filter(l => l !== id);
-        } else {
-            lockedIds.push(id);
-        }
-        localStorage.setItem('xe60c_locks', JSON.stringify(lockedIds));
-        renderGrid();
+    function switchPage(p, e) {
+        document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+        document.getElementById('page-'+p).classList.add('active');
+        e.currentTarget.classList.add('active');
     }
 
     function renderGrid() {
@@ -151,96 +120,64 @@
                 if(attendance[s.id] === undefined) attendance[s.id] = true;
                 const isLocked = lockedIds.includes(s.id);
                 seat.className = `seat ${attendance[s.id] ? 'present' : 'absent'} ${isLocked ? 'locked' : ''}`;
-                
-                seat.innerHTML = `
-                    <div class="lock-icon" onclick="toggleLock('${s.id}', event)">${isLocked ? '🔒' : '🔓'}</div>
-                    <span style="font-size:0.6rem">${s.pos}</span><br>
-                    <b>${s.id.slice(-3)}</b><br>${s.ch}
-                `;
-                
-                seat.onclick = () => { 
-                    attendance[s.id] = !attendance[s.id]; 
-                    save(); 
-                    renderGrid(); 
-                    updateUI(); 
-                };
+                seat.innerHTML = `<div class="lock-btn" onclick="toggleLock('${s.id}', event)">${isLocked ? '🔒' : '🔓'}</div>
+                                  <span style="font-size:0.6rem">${s.pos}</span><br><b>${s.id.slice(-3)}</b><br>${s.ch}`;
+                seat.onclick = () => { attendance[s.id] = !attendance[s.id]; save(); renderGrid(); updateUI(); };
             }
             grid.appendChild(seat);
-            if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) {
-                const gap = document.createElement('div');
-                gap.className = 'gap-column';
-                grid.appendChild(gap);
-            }
+            if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) grid.appendChild(document.createElement('div')).className='gap-column';
         });
     }
 
+    function toggleLock(id, e) {
+        e.stopPropagation();
+        lockedIds = lockedIds.includes(id) ? lockedIds.filter(x => x !== id) : [...lockedIds, id];
+        localStorage.setItem('xe60c_locks', JSON.stringify(lockedIds));
+        renderGrid();
+    }
+
     function shuffleSeats() {
-        // 1. 找出所有未被鎖定且不是空位的學生
         let pool = currentLayout.filter(s => s.id !== 'empty' && !lockedIds.includes(s.id));
-        
-        // 2. Fisher-Yates Shuffle
         for (let i = pool.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
-
-        // 3. 重新填入，如果該位置原本是空位或是被鎖定的學生，則跳過不更動
         let poolIdx = 0;
         currentLayout = currentLayout.map(cell => {
-            if (cell.id === 'empty' || lockedIds.includes(cell.id)) {
-                return cell; // 保持原樣
-            }
-            const newStudent = pool[poolIdx++];
-            return { ...newStudent, pos: cell.pos }; // 換人，但不換位置標籤
+            if (cell.id === 'empty' || lockedIds.includes(cell.id)) return cell;
+            const nextStudent = pool[poolIdx++];
+            return { ...nextStudent, pos: cell.pos };
         });
-
         localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout));
         renderGrid();
     }
 
-    // 其餘邏輯 (updateUI, step, changeFocus, save, resetAll, exportResult) 同前版本
     function updateUI() {
-        const total = sortedList.length;
         const p = Object.values(attendance).filter(v => v).length;
         document.getElementById('count-p').innerText = p;
-        document.getElementById('count-a').innerText = total - p;
+        document.getElementById('count-a').innerText = sortedList.length - p;
         const s = sortedList[focusIdx];
         document.getElementById('f-id').innerText = s.id.slice(-3);
         document.getElementById('f-name').innerText = s.ch;
-        const statusEl = document.getElementById('f-status');
-        statusEl.innerText = attendance[s.id] ? "出席中" : "缺席中";
-        statusEl.style.color = attendance[s.id] ? "var(--success)" : "var(--danger)";
+        const st = document.getElementById('f-status');
+        st.innerText = attendance[s.id] ? "出席中" : "缺席中";
+        st.style.color = attendance[s.id] ? "var(--success)" : "var(--danger)";
     }
 
-    function step(isPresent) {
-        attendance[sortedList[focusIdx].id] = isPresent;
-        save();
-        changeFocus(1);
-        renderGrid();
-    }
-
-    function changeFocus(n) {
-        focusIdx = (focusIdx + n + sortedList.length) % sortedList.length;
-        updateUI();
-    }
-
+    function step(v) { attendance[sortedList[focusIdx].id] = v; save(); changeFocus(1); renderGrid(); }
+    function changeFocus(n) { focusIdx = (focusIdx + n + sortedList.length) % sortedList.length; updateUI(); }
     function save() { localStorage.setItem('xe60c_v2', JSON.stringify(attendance)); }
-
-    function resetAll() { 
-        if(confirm('重置所有資料（含座位、鎖定、紀錄）？')) { 
-            attendance = {}; 
-            currentLayout = [...rawData];
-            lockedIds = [];
+    
+    function resetAll() {
+        if(confirm('確定重置所有資料？')) {
             localStorage.clear();
-            focusIdx = 0; 
-            init(); 
-        } 
+            location.reload();
+        }
     }
 
     function exportResult() {
-        const absentList = sortedList.filter(s => !attendance[s.id]).map(s => `${s.id.slice(-3)}${s.ch}`);
-        const subject = document.getElementById('subject').value;
-        const txt = `${subject} 點名紀錄\n缺席：${absentList.length ? absentList.join(', ') : '全員出席'}`;
+        const list = sortedList.filter(s => !attendance[s.id]).map(s => `${s.id.slice(-3)}${s.ch}`);
+        const txt = `${document.getElementById('subject').value} 點名紀錄\n缺席：${list.length ? list.join(', ') : '全員出席'}`;
         navigator.clipboard.writeText(txt).then(() => alert('已複製！'));
     }
 
