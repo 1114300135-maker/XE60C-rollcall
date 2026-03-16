@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧點名系統 v2.0</title>
+    <title>XE60C 智慧點名系統 v2.1</title>
     <style>
         :root { 
             --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; 
-            --bg: #f0f2f5; --highlight: #3498db; --card-bg: #ffffff;
+            --bg: #f0f2f5; --highlight: #3498db; --card-bg: #ffffff; --purple: #8e44ad;
         }
         
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 0; }
         .container { width: 1000px; margin: 20px auto; background: var(--card-bg); padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
 
-        /* 頂部導覽分頁 */
+        /* 導覽分頁 */
         .tab-nav { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
         .tab-btn { padding: 12px 30px; cursor: pointer; border: none; background: none; font-size: 1.1rem; color: #7f8c8d; transition: 0.3s; font-weight: bold; }
         .tab-btn.active { color: var(--highlight); border-bottom: 3px solid var(--highlight); margin-bottom: -2px; }
@@ -22,11 +22,11 @@
         .header-box { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #eee; }
         .stat-item { font-weight: bold; font-size: 1.1rem; }
 
-        /* 頁面切換控制 */
+        /* 頁面切換 */
         .page { display: none; }
         .page.active { display: block; }
 
-        /* --- 頁面 1: 座位圖 --- */
+        /* 座位圖模式 */
         .seating-chart { 
             display: grid; grid-template-columns: repeat(2, 100px) 35px repeat(2, 100px) 35px repeat(2, 100px) 35px repeat(2, 100px); 
             gap: 10px; padding: 20px; background: #dfe4ea; border-radius: 10px; justify-content: center;
@@ -37,34 +37,36 @@
         }
         .seat.present { background: #e6fffa; border-color: var(--success); color: #234e52; }
         .seat.absent { background: #fff5f5; border-color: var(--danger); color: #822727; }
-        .seat.empty { background: #eee; border: 1px dashed #aaa; cursor: default; opacity: 0.5; }
+        .seat.empty { background: #eee; border: 1px dashed #aaa; cursor: default; opacity: 0.5; pointer-events: none; }
         .gap-column { background: transparent; }
 
-        /* --- 頁面 2: 座號導航 --- */
+        /* 座號導航模式 */
         .focus-container { text-align: center; padding: 40px 20px; background: #fdfdfd; border: 2px dashed #cbd5e0; border-radius: 15px; }
         .focus-card { display: inline-block; width: 400px; padding: 30px; background: white; border: 3px solid var(--highlight); border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
         .focus-id { font-size: 1.5rem; color: #718096; margin-bottom: 10px; }
         .focus-name { font-size: 3rem; font-weight: bold; color: var(--primary); margin-bottom: 20px; }
         .focus-nav-btns { display: flex; justify-content: center; gap: 15px; margin-top: 30px; }
 
-        /* 共用元件 */
+        /* 共用按鈕 */
         .screen { width: 400px; margin: 25px auto; background: #333; color: white; text-align: center; padding: 10px; border-radius: 0 0 20px 20px; font-weight: bold; letter-spacing: 5px; }
         button { padding: 12px 24px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
         .btn-success { background: var(--success); color: white; font-size: 1.1rem; }
         .btn-danger { background: var(--danger); color: white; font-size: 1.1rem; }
         .btn-copy { background: var(--primary); color: white; }
+        .btn-shuffle { background: var(--purple); color: white; }
         .btn-reset { background: #edf2f7; color: #4a5568; }
-        kbd { background: #f1f1f1; padding: 2px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.8rem; }
+        
+        .footer-controls { text-align: center; margin-top: 30px; display: flex; justify-content: center; gap: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header style="text-align:center; margin-bottom:10px;"><h1>XE60C 點名系統</h1></header>
+    <header style="text-align:center; margin-bottom:10px;"><h1>XE60C 智慧點名系統</h1></header>
 
     <div class="tab-nav">
-        <div class="tab-btn active" onclick="switchPage('grid')">🪑 座位圖模式</div>
-        <div class="tab-btn" onclick="switchPage('focus')">🔢 座號導航模式</div>
+        <div class="tab-btn active" onclick="switchPage('grid', event)">🪑 座位圖模式</div>
+        <div class="tab-btn" onclick="switchPage('focus', event)">🔢 座號導航模式</div>
     </div>
 
     <div class="header-box">
@@ -100,13 +102,13 @@
         </div>
     </div>
 
-    <div style="text-align: center; margin-top: 30px;">
+    <div class="footer-controls">
+        <button class="btn-shuffle" onclick="shuffleSeats()">🔀 隨機重排座位</button>
         <button class="btn-reset" onclick="resetAll()">全部重設</button>
     </div>
 </div>
 
 <script>
-    // 學生資料 (同前)
     const rawData = [
         {pos:"1-7", id:"1114300146", ch:"李婕禕"}, {pos:"2-7", id:"1114300501", ch:"賈伯珍"}, {pos:"3-7", id:"1114300174", ch:"蔡悅琳"}, {pos:"4-7", id:"1114300137", ch:"賴瑾安"}, {pos:"5-7", id:"1114300154", ch:"張鈺婕"}, {pos:"6-7", id:"1114300165", ch:"趙于嫻"}, {pos:"7-7", id:"1114300141", ch:"林紫騏"}, {pos:"8-7", id:"1114300173", ch:"黃毓霏"},
         {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾"},
@@ -118,6 +120,7 @@
     ];
 
     let attendance = JSON.parse(localStorage.getItem('xe60c_v2')) || {};
+    let currentLayout = JSON.parse(localStorage.getItem('xe60c_layout')) || [...rawData];
     let sortedList = rawData.filter(s => s.id !== 'empty').sort((a,b) => a.id.localeCompare(b.id));
     let focusIdx = 0;
 
@@ -126,8 +129,7 @@
         updateUI();
     }
 
-    // 分頁切換
-    function switchPage(page) {
+    function switchPage(page, event) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`page-${page}`).classList.add('active');
@@ -137,7 +139,7 @@
     function renderGrid() {
         const grid = document.getElementById('seating-grid');
         grid.innerHTML = '';
-        rawData.forEach((s, i) => {
+        currentLayout.forEach((s, i) => {
             const seat = document.createElement('div');
             if (s.id === 'empty') {
                 seat.className = 'seat empty';
@@ -146,27 +148,57 @@
                 if(attendance[s.id] === undefined) attendance[s.id] = true;
                 seat.className = `seat ${attendance[s.id] ? 'present' : 'absent'}`;
                 seat.innerHTML = `<span style="font-size:0.6rem">${s.pos}</span><br><b>${s.id.slice(-3)}</b><br>${s.ch}`;
-                seat.onclick = () => { attendance[s.id] = !attendance[s.id]; save(); renderGrid(); updateUI(); };
+                seat.onclick = () => { 
+                    attendance[s.id] = !attendance[s.id]; 
+                    save(); 
+                    renderGrid(); 
+                    updateUI(); 
+                };
             }
             grid.appendChild(seat);
-            if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) grid.appendChild(document.createElement('div')).className='gap-column';
+            if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) {
+                const gap = document.createElement('div');
+                gap.className = 'gap-column';
+                grid.appendChild(gap);
+            }
         });
     }
 
     function updateUI() {
-        // 更新統計
         const total = sortedList.length;
         const p = Object.values(attendance).filter(v => v).length;
         document.getElementById('count-p').innerText = p;
         document.getElementById('count-a').innerText = total - p;
 
-        // 更新導航模式卡片
         const s = sortedList[focusIdx];
         document.getElementById('f-id').innerText = s.id.slice(-3);
         document.getElementById('f-name').innerText = s.ch;
         const statusEl = document.getElementById('f-status');
         statusEl.innerText = attendance[s.id] ? "出席中" : "缺席中";
         statusEl.style.color = attendance[s.id] ? "var(--success)" : "var(--danger)";
+    }
+
+    function shuffleSeats() {
+        if (!confirm('確定要打亂座位表嗎？（將保留空位位置）')) return;
+        
+        // 取得所有非空位的學生資料
+        let studentsOnly = currentLayout.filter(s => s.id !== 'empty');
+        
+        // Fisher-Yates Shuffle
+        for (let i = studentsOnly.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [studentsOnly[i], studentsOnly[j]] = [studentsOnly[j], studentsOnly[i]];
+        }
+
+        let studentIdx = 0;
+        currentLayout = currentLayout.map(cell => {
+            if (cell.id === 'empty') return cell;
+            const student = studentsOnly[studentIdx++];
+            return { ...student, pos: cell.pos }; // 學生換格子，但格子的物理座標標籤不變
+        });
+
+        localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout));
+        renderGrid();
     }
 
     function step(isPresent) {
@@ -181,14 +213,26 @@
         updateUI();
     }
 
-    function save() { localStorage.setItem('xe60c_v2', JSON.stringify(attendance)); }
+    function save() { 
+        localStorage.setItem('xe60c_v2', JSON.stringify(attendance)); 
+    }
 
-    function resetAll() { if(confirm('重置所有資料？')) { attendance={}; localStorage.removeItem('xe60c_v2'); focusIdx=0; init(); } }
+    function resetAll() { 
+        if(confirm('重置所有資料（包含座位順序與出席紀錄）？')) { 
+            attendance = {}; 
+            currentLayout = [...rawData];
+            localStorage.removeItem('xe60c_v2'); 
+            localStorage.removeItem('xe60c_layout');
+            focusIdx = 0; 
+            init(); 
+        } 
+    }
 
     function exportResult() {
-        const list = sortedList.filter(s => !attendance[s.id]).map(s => `${s.id.slice(-3)}${s.ch}`);
-        const txt = `XE60C 點名紀錄\n缺席：${list.length?list.join(', '):'全員出席'}`;
-        navigator.clipboard.writeText(txt).then(()=>alert('已複製！'));
+        const absentList = sortedList.filter(s => !attendance[s.id]).map(s => `${s.id.slice(-3)}${s.ch}`);
+        const subject = document.getElementById('subject').value;
+        const txt = `${subject} 點名紀錄\n缺席：${absentList.length ? absentList.join(', ') : '全員出席'}`;
+        navigator.clipboard.writeText(txt).then(() => alert('結果已複製到剪貼簿！'));
     }
 
     document.addEventListener('keydown', (e) => {
