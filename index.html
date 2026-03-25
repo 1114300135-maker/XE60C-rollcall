@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v4.9</title>
+    <title>XE60C 智慧排座系統 v5.0</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -44,7 +44,7 @@
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v4.9</span></h1>
+    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v5.0</span></h1>
 
     <div class="header-box">
         <select id="subject">
@@ -67,7 +67,7 @@
 
     <div class="footer-controls">
         <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定位置</button>
-        <button class="btn-shuffle" onclick="shuffleLogic()">🔀 隨機大風吹</button>
+        <button class="btn-shuffle" onclick="shuffleLogic()">🔀 重新排列</button>
         <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 恢復照片排列</button>
     </div>
 </div>
@@ -75,7 +75,6 @@
 <div id="toast">提示訊息</div>
 
 <script>
-    // 依據照片精確轉錄的名單
     const rawData = [
         {pos:"1-7", id:"1114300146", ch:"李婕禕"}, {pos:"2-7", id:"1114300501", ch:"賈伯珍"}, {pos:"3-7", id:"1114300174", ch:"蔡悅琳"}, {pos:"4-7", id:"1114300137", ch:"賴瑾安"}, {pos:"5-7", id:"1114300154", ch:"張鈺婕"}, {pos:"6-7", id:"1114300165", ch:"趙于嫻"}, {pos:"7-7", id:"1114300141", ch:"林紫騏"}, {pos:"8-7", id:"1114300173", ch:"黃毓霏"},
         {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾"},
@@ -144,7 +143,7 @@
 
         const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
 
-        // 1. 四人幫 (2x2)
+        // 磁鐵群組邏輯 (保留並內部隨機)
         const fPool = pool.filter(s => groupFour.includes(s.id));
         if (fPool.length === 4) {
             let blocks = [];
@@ -164,7 +163,6 @@
             }
         }
 
-        // 2. 兩對二人組
         [pairA, pairB].forEach(pIds => {
             const pPool = pool.filter(s => pIds.includes(s.id));
             if (pPool.length === 2) {
@@ -183,7 +181,6 @@
             }
         });
 
-        // 3. 剩下隨機
         shuffleArr(pool);
         freeIndices.forEach((idx, i) => { finalMap[idx] = pool[i]; });
 
@@ -192,7 +189,7 @@
             return { ...finalMap[i], pos: s.pos };
         });
 
-        save(); renderGrid(); showToast("大風吹完成！");
+        save(); renderGrid(); showToast("重新排列完成！");
     }
 
     function save() {
@@ -208,17 +205,15 @@
     function resetData() {
         if(confirm("將座位恢復至照片的初始狀態？")) {
             currentLayout = [...rawData]; manualFixedIds = [];
-            save(); renderGrid(); showToast("已還原初始設定");
+            save(); renderGrid(); showToast("已恢復初始排列");
         }
     }
     function exportResult() {
         const subElem = document.getElementById('subject');
         const subValue = subElem.value;
         const subText = subElem.options[subElem.selectedIndex].text;
-        
         const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
         let header = subValue === "none" ? "缺席名單：" : `【${subText}】缺席名單：`;
-        
         navigator.clipboard.writeText(header + (list.join(', ') || '全員出席'));
         showToast("報表已複製");
     }
