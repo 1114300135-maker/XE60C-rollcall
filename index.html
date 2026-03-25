@@ -5,56 +5,203 @@
     <meta name="viewport" content="width=1024, user-scalable=yes">
     <title>XE60C 智慧排座系統</title>
     <style>
+        /* Apple 風格色彩變數 */
         :root { 
-            --primary: #334155; --success: #10b981; --danger: #ef4444; 
-            --bg: #f8fafc; --highlight: #3b82f6; --card-bg: #ffffff; 
-            --purple: #8b5cf6; --text: #1e293b; --border: #e2e8f0;
+            --primary: #1C1C1E;      /* iOS 深灰黑 */
+            --success: #34C759;      /* iOS 系統綠 */
+            --danger: #FF3B30;       /* iOS 系統紅 */
+            --bg: #F2F2F7;           /* iOS 背景灰 */
+            --highlight: #007AFF;    /* iOS 系統藍 */
+            --card-bg: #FFFFFF; 
+            --purple: #AF52DE;       /* iOS 系統紫 */
+            --text: #1C1C1E; 
+            --text-secondary: #8E8E93;
+            --border: #E5E5EA;
         }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { width: 1050px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
-        h1 { text-align: center; color: var(--primary); font-size: 1.8rem; margin-bottom: 20px; }
+
+        /* 系統平滑字體 */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Microsoft JhengHei", sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 30px 20px; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 圓潤的卡片主體 (類似 iOS 小工具) */
+        .container { 
+            width: 1050px; 
+            margin: 0 auto; 
+            background: var(--card-bg); 
+            padding: 40px; 
+            border-radius: 32px; 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02); 
+        }
+
+        h1 { 
+            text-align: center; 
+            color: var(--primary); 
+            font-size: 2rem; 
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 25px; 
+        }
         
-        .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 10px; padding: 25px; background: #f1f5f9; border-radius: 20px; justify-content: center; }
-        .seat { background: white; border: 2px solid transparent; border-radius: 12px; padding: 10px 5px; text-align: center; min-height: 90px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .seat.present { background: #ecfdf5; border-color: #a7f3d0; }
-        .seat.absent { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+        /* 頂部資訊列：微毛玻璃感與柔和邊框 */
+        .header-box { 
+            display: grid; 
+            grid-template-columns: 1.8fr 1fr 1fr 1.2fr; 
+            gap: 15px; 
+            margin-bottom: 25px; 
+            background: rgba(242, 242, 247, 0.6); 
+            backdrop-filter: blur(10px);
+            padding: 16px; 
+            border-radius: 18px; 
+            border: 1px solid rgba(0,0,0,0.03); 
+            align-items: center;
+        }
+
+        /* 選擇器優化 */
+        select { 
+            padding: 10px 14px; 
+            border-radius: 12px; 
+            border: none; 
+            font-weight: 600; 
+            color: var(--primary); 
+            background: #E5E5EA; 
+            font-size: 1rem;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+        }
         
-        .seat.is-manual { border-color: var(--highlight); background: #eff6ff; }
-        .seat.is-manual::after { content: '🔒'; position: absolute; top: -5px; right: -5px; font-size: 0.85rem; background: white; border-radius: 50%; padding: 2px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+        .seating-chart { 
+            display: grid; 
+            grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); 
+            gap: 12px; 
+            padding: 30px; 
+            background: #FAFAFC; 
+            border-radius: 24px; 
+            justify-content: center; 
+            border: 1px solid var(--border);
+        }
+
+        /* 座位卡片：更圓的倒角與清爽陰影 */
+        .seat { 
+            background: white; 
+            border: 2px solid transparent; 
+            border-radius: 16px; 
+            padding: 12px 6px; 
+            text-align: center; 
+            min-height: 90px; 
+            position: relative; 
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+        }
+        .seat:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .seat b { font-size: 1.1rem; letter-spacing: 0.5px; }
+        .seat span { font-size: 0.9rem; font-weight: 500; margin-top: 2px; }
+
+        /* 出席/缺席 採用 iOS 的淺色背景搭配明亮文字 */
+        .seat.present { background: #E8F8F0; border-color: #A3E4B7; }
+        .seat.absent { background: #FFECEB; border-color: #FFB3B0; color: #D70015; }
         
-        .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.4; }
-        .header-box { display: grid; grid-template-columns: 1.8fr 1fr 1fr 1.2fr; gap: 15px; margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
+        /* 手動鎖定：iOS 系統藍 */
+        .seat.is-manual { border-color: var(--highlight); background: #E5F0FF; }
+        .seat.is-manual::after { 
+            content: '🔒'; position: absolute; top: -6px; right: -6px; 
+            font-size: 0.8rem; background: white; border-radius: 50%; 
+            padding: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); 
+        }
         
-        /* 黑板樣式 */
+        .seat.empty { background: #E5E5EA; border: none; cursor: default; opacity: 0.5; color: var(--text-secondary); box-shadow: none; }
+        
+        /* 黑板：類似動態島 / Mac 選單列的深灰質感 */
         .blackboard {
-            background: #1e293b; 
-            color: #f8fafc;
+            background: #1C1C1E; 
+            color: #FFFFFF;
             text-align: center;
-            padding: 12px;
-            margin: 25px auto 10px auto;
-            width: 60%;
-            border-radius: 12px;
+            padding: 14px;
+            margin: 30px auto 10px auto;
+            width: 50%;
+            border-radius: 20px;
             font-size: 1.1rem;
-            font-weight: bold;
-            letter-spacing: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border: 4px solid #cbd5e1;
+            font-weight: 600;
+            letter-spacing: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
         }
 
-        .footer-controls { margin-top: 25px; display: flex; justify-content: center; gap: 12px; padding-bottom: 20px; border-bottom: 2px dashed var(--border); }
+        /* 底部功能列 */
+        .footer-controls { 
+            margin-top: 30px; 
+            display: flex; 
+            justify-content: center; 
+            gap: 14px; 
+            padding-bottom: 25px; 
+            border-bottom: 1px solid var(--border); 
+        }
         
-        button { border: none; border-radius: 10px; font-weight: bold; cursor: pointer; padding: 10px 16px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem; transition: 0.2s; }
+        /* 按鈕優化：Apple 風格膠囊按鈕 */
+        button { 
+            border: none; 
+            border-radius: 20px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            padding: 12px 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-size: 0.95rem; 
+            transition: 0.2s; 
+            letter-spacing: 0.3px;
+        }
+        button:active { transform: scale(0.96); opacity: 0.8; }
+        
         .btn-edit { background: var(--highlight); color: white; }
-        .btn-edit.active { background: var(--primary); outline: 4px solid rgba(59, 130, 246, 0.4); }
+        .btn-edit.active { background: #0056b3; box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.3); }
 
-        .history-section { margin-top: 30px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
-        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-top: 15px; }
-        .history-item { background: white; padding: 12px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        /* 歷史紀錄區塊 */
+        .history-section { margin-top: 35px; background: transparent; padding: 0 10px; }
+        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 15px; }
+        .history-item { 
+            background: #FAFAFC; 
+            padding: 14px 16px; 
+            border-radius: 16px; 
+            border: 1px solid var(--border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-weight: 500;
+        }
 
-        select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); background: white; }
-        #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; }
-        #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
-        #toast.show { opacity: 1; }
+        #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        
+        /* 提示框：類似 iOS 通知橫幅 (毛玻璃深色) */
+        #toast { 
+            position: fixed; 
+            bottom: 40px; 
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(28, 28, 30, 0.85); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white; 
+            padding: 14px 28px; 
+            border-radius: 30px; 
+            opacity: 0; 
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            z-index: 1000; 
+            pointer-events: none; 
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body>
@@ -68,9 +215,9 @@
             <option>早八</option><option>西班牙文</option><option>音樂</option><option>電腦</option>
             <option>生物</option><option>現代文學</option><option>數學</option><option>藝術生活</option>
         </select>
-        <div style="text-align:center;">出席: <b id="count-p" style="color:var(--success); font-size: 1.2rem;">0</b></div>
-        <div style="text-align:center;">缺席: <b id="count-a" style="color:var(--danger); font-size: 1.2rem;">0</b></div>
-        <button onclick="exportResult()" style="background:var(--primary); color:white;">📋 複製報表</button>
+        <div style="text-align:center; font-weight: 600;">出席: <b id="count-p" style="color:var(--success); font-size: 1.3rem;">0</b></div>
+        <div style="text-align:center; font-weight: 600;">缺席: <b id="count-a" style="color:var(--danger); font-size: 1.3rem;">0</b></div>
+        <button onclick="exportResult()" style="background:var(--primary); color:white; margin-left: auto;">📋 複製報表</button>
     </div>
 
     <div id="seating-grid" class="seating-chart"></div>
@@ -81,11 +228,11 @@
         <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定 / 指定座位</button>
         <button style="background: var(--purple); color: white;" onclick="shuffleLogic()">🔀 重新排列</button>
         <button style="background: var(--success); color: white;" onclick="saveToHistory()">💾 儲存今日紀錄</button>
-        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 清空鎖定與重設</button>
+        <button onclick="resetData()" style="background:#E5E5EA; color:var(--primary);">🧹 清空與重設</button>
     </div>
 
     <div class="history-section">
-        <h3 style="margin:0; color: var(--primary);">📂 歷史紀錄 (含座位鎖定狀態)</h3>
+        <h3 style="margin:0; color: var(--primary); font-size: 1.2rem;">📂 歷史紀錄</h3>
         <div id="history-list" class="history-list"></div>
     </div>
 </div>
@@ -173,7 +320,7 @@
             else {
                 const isFixed = manualFixedIds.includes(s.id);
                 seat.className = `seat ${attendance[s.id] !== false ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
-                seat.innerHTML = `<small style="color:#94a3b8">${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
+                seat.innerHTML = `<small style="color:var(--text-secondary); font-size: 0.8rem;">${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
             }
             seat.onclick = (e) => handleSeatClick(i, e);
             grid.appendChild(seat);
@@ -251,7 +398,6 @@
             return { ...finalMap[i], pos: s.pos };
         });
         
-        // 移除了提示文字中的「(149 已安排至最後一排)」
         save(); renderGrid(); showToast("重新排列完成！已避開鎖定者");
     }
 
@@ -274,12 +420,12 @@
 
     function renderHistory() {
         const container = document.getElementById('history-list');
-        container.innerHTML = historyRecords.length === 0 ? '<p style="color:#94a3b8;">尚無存檔</p>' : '';
+        container.innerHTML = historyRecords.length === 0 ? '<p style="color:var(--text-secondary); margin-left: 5px;">尚無存檔</p>' : '';
         historyRecords.forEach(rec => {
             const item = document.createElement('div');
             item.className = 'history-item';
-            item.innerHTML = `<div><small>${rec.name}</small></div>
-                <button class="btn-edit" style="padding:4px 8px;font-size:12px" onclick="loadHistory(${rec.id})">載入</button>`;
+            item.innerHTML = `<div><small style="color:var(--text-secondary);">${rec.name}</small></div>
+                <button class="btn-edit" style="padding:6px 12px; font-size:12px; border-radius: 12px;" onclick="loadHistory(${rec.id})">載入</button>`;
             container.appendChild(item);
         });
     }
