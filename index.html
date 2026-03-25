@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v4.7</title>
+    <title>XE60C 智慧排座系統 v4.8</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -14,34 +14,50 @@
         .container { width: 1050px; margin: 20px auto; background: var(--card-bg); padding: 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
         h1 { text-align: center; color: var(--primary); font-size: 1.8rem; margin-bottom: 20px; }
         
+        /* 座位表配置 */
         .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 10px; padding: 25px; background: #f1f5f9; border-radius: 20px; justify-content: center; }
-        .seat { background: white; border: 2px solid transparent; border-radius: 12px; padding: 10px 5px; text-align: center; min-height: 90px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
+        .seat { background: white; border: 2px solid transparent; border-radius: 12px; padding: 10px 5px; text-align: center; min-height: 90px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        
         .seat.present { background: #ecfdf5; border-color: #a7f3d0; }
         .seat.absent { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
         .seat.is-manual { border-color: var(--highlight); }
         .seat.is-manual::after { content: '🔒'; position: absolute; top: -5px; right: -5px; font-size: 0.8rem; background: white; border-radius: 50%; padding: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
         .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.4; }
         
-        .header-box { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 12px; }
+        /* 控制面板 */
+        .header-box { display: grid; grid-template-columns: 1.8fr 1fr 1fr 1.2fr; gap: 15px; margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
         .footer-controls { margin-top: 25px; display: flex; justify-content: center; gap: 12px; }
-        button { border: none; border-radius: 10px; font-weight: bold; cursor: pointer; padding: 12px 20px; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; }
+        
+        button { border: none; border-radius: 10px; font-weight: bold; cursor: pointer; padding: 12px 20px; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; transition: 0.2s; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        
         .btn-shuffle { background: var(--purple); color: white; }
         .btn-edit { background: var(--highlight); color: white; }
-        .btn-edit.active { background: var(--primary); outline: 3px solid rgba(59, 130, 246, 0.3); }
+        .btn-edit.active { background: var(--primary); outline: 4px solid rgba(59, 130, 246, 0.2); }
         
-        #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 8px; opacity: 0; transition: 0.3s; z-index: 1000; }
+        select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); outline: none; }
+        
+        #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: 0.3s; z-index: 1000; }
         #toast.show { opacity: 1; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 v4.7</h1>
+    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v4.8</span></h1>
 
     <div class="header-box">
-        <select id="subject" style="padding:10px; border-radius:8px;"><option>西班牙文</option><option>音樂</option><option>電腦</option></select>
-        <div style="text-align:center;">出席: <b id="count-p" style="color:var(--success)">0</b></div>
-        <div style="text-align:center;">缺席: <b id="count-a" style="color:var(--danger)">0</b></div>
+        <select id="subject">
+            <option>西班牙文</option>
+            <option>音樂</option>
+            <option>電腦</option>
+            <option>生物</option>
+            <option>現代文學</option>
+            <option>數學</option>
+            <option>藝術生活</option>
+        </select>
+        <div style="text-align:center;">出席: <b id="count-p" style="color:var(--success); font-size: 1.2rem;">0</b></div>
+        <div style="text-align:center;">缺席: <b id="count-a" style="color:var(--danger); font-size: 1.2rem;">0</b></div>
         <button onclick="exportResult()" style="background:var(--primary); color:white;">📋 複製報表</button>
     </div>
 
@@ -49,15 +65,15 @@
 
     <div class="footer-controls">
         <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定</button>
-        <button class="btn-shuffle" onclick="shuffleLogic()">🔀 隨機打亂 (保留磁鐵規則)</button>
-        <button onclick="resetData()" style="background:#e2e8f0; color:var(--primary);">🧹 恢復照片初始排列</button>
+        <button class="btn-shuffle" onclick="shuffleLogic()">🔀 隨機打亂 (保留所有規定)</button>
+        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 恢復照片初始排列</button>
     </div>
 </div>
 
 <div id="toast">提示訊息</div>
 
 <script>
-    // 根據照片精確轉錄的名單 (Row 7 down to Row 1)
+    // 依據照片精確轉錄的名單
     const rawData = [
         {pos:"1-7", id:"1114300146", ch:"李婕禕"}, {pos:"2-7", id:"1114300501", ch:"賈伯珍"}, {pos:"3-7", id:"1114300174", ch:"蔡悅琳"}, {pos:"4-7", id:"1114300137", ch:"賴瑾安"}, {pos:"5-7", id:"1114300154", ch:"張鈺婕"}, {pos:"6-7", id:"1114300165", ch:"趙于嫻"}, {pos:"7-7", id:"1114300141", ch:"林紫騏"}, {pos:"8-7", id:"1114300173", ch:"黃毓霏"},
         {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾"},
@@ -93,7 +109,7 @@
             else {
                 const isFixed = manualFixedIds.includes(s.id);
                 seat.className = `seat ${attendance[s.id] !== false ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
-                seat.innerHTML = `<small style="color:#94a3b8">${s.pos}</small><b>${s.id.slice(-3)}</b><span style="font-weight:600">${s.ch}</span>`;
+                seat.innerHTML = `<small style="color:#94a3b8">${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
                 seat.onclick = () => {
                     if (isChangingMode) {
                         if(isFixed) manualFixedIds = manualFixedIds.filter(id => id !== s.id);
@@ -126,7 +142,7 @@
 
         const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
 
-        // 1. 四人幫 (內部隨機)
+        // 1. 四人幫 (2x2)
         const fPool = pool.filter(s => groupFour.includes(s.id));
         if (fPool.length === 4) {
             let blocks = [];
@@ -146,7 +162,7 @@
             }
         }
 
-        // 2. 兩對二人組 (內部隨機)
+        // 2. 兩對二人組
         [pairA, pairB].forEach(pIds => {
             const pPool = pool.filter(s => pIds.includes(s.id));
             if (pPool.length === 2) {
@@ -174,7 +190,7 @@
             return { ...finalMap[i], pos: s.pos };
         });
 
-        save(); renderGrid(); showToast("大風吹完成！(已隨機換位)");
+        save(); renderGrid(); showToast("換座位完成！已考慮科目與好友需求。");
     }
 
     function save() {
@@ -188,15 +204,16 @@
         document.getElementById('count-a').innerText = 55 - p;
     }
     function resetData() {
-        if(confirm("確定要將座位恢復成照片的初始順序嗎？(點名紀錄會保留)")) {
+        if(confirm("將座位恢復至照片的初始狀態？")) {
             currentLayout = [...rawData]; manualFixedIds = [];
-            save(); renderGrid(); showToast("已恢復初始排列");
+            save(); renderGrid(); showToast("已重設為初始位置");
         }
     }
     function exportResult() {
+        const sub = document.getElementById('subject').value;
         const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
-        navigator.clipboard.writeText("缺席名單：" + (list.join(', ') || '全員出席'));
-        showToast("報表已複製");
+        navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '全員出席'));
+        showToast("缺席報表已複製");
     }
 
     init();
