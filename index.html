@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v7.5</title>
+    <title>XE60C 智慧排座系統 v7.8</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -19,8 +19,7 @@
         .seat.present { background: #ecfdf5; border-color: #a7f3d0; }
         .seat.absent { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
         
-        /* 鎖定狀態樣式 */
-        .seat.is-manual { border-color: var(--highlight); background: #eff6ff; box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.1); }
+        .seat.is-manual { border-color: var(--highlight); background: #eff6ff; }
         .seat.is-manual::after { content: '🔒'; position: absolute; top: -5px; right: -5px; font-size: 0.85rem; background: white; border-radius: 50%; padding: 2px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
         
         .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.4; }
@@ -28,13 +27,11 @@
         .footer-controls { margin-top: 25px; display: flex; justify-content: center; gap: 12px; padding-bottom: 20px; border-bottom: 2px dashed var(--border); }
         
         button { border: none; border-radius: 10px; font-weight: bold; cursor: pointer; padding: 10px 16px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem; transition: 0.2s; }
-        .btn-save { background: var(--success); color: white; }
-        .btn-shuffle { background: var(--purple); color: white; }
         .btn-edit { background: var(--highlight); color: white; }
-        .btn-edit.active { background: var(--primary); outline: 4px solid rgba(59, 130, 246, 0.4); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        .btn-edit.active { background: var(--primary); outline: 4px solid rgba(59, 130, 246, 0.4); }
 
-        select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); background: white; }
+        /* 選單樣式：稍微加寬以容納學號 */
+        select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); background: white; min-width: 150px; }
         #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; }
         #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
         #toast.show { opacity: 1; }
@@ -43,11 +40,11 @@
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v7.5 (鎖定管理版)</span></h1>
+    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v7.8 (學號辨識版)</span></h1>
 
     <div class="header-box">
         <select id="subject">
-            <option value="none">不顯示</option>
+            <option value="none">不顯示科目</option>
             <option>早八</option><option>西班牙文</option><option>音樂</option><option>電腦</option>
             <option>生物</option><option>現代文學</option><option>數學</option><option>藝術生活</option>
         </select>
@@ -60,12 +57,9 @@
 
     <div class="footer-controls">
         <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定 / 指定座位</button>
-        <button class="btn-shuffle" onclick="shuffleLogic()">🔀 重新排列</button>
-        <button class="btn-save" onclick="saveToHistory()">💾 儲存今日紀錄</button>
-        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 清空所有鎖定</button>
+        <button style="background: var(--purple); color: white;" onclick="shuffleLogic()">🔀 重新排列</button>
+        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 清空鎖定</button>
     </div>
-
-    <div id="history-list" style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;"></div>
 </div>
 
 <select id="seat-picker" onchange="applySeatPick(this)"></select>
@@ -90,17 +84,22 @@
 
     function init() { buildPicker(); renderGrid(); updateUI(); }
 
+    // --- 關鍵修改：顯示學號後三碼 ---
     function buildPicker() {
         const picker = document.getElementById('seat-picker');
         picker.innerHTML = '<option value="">-- 指定學生 --</option>';
-        const sorted = [...rawData].filter(s => s.id !== 'empty').sort((a,b) => a.ch.localeCompare(b.ch, 'zh-Hant'));
-        sorted.forEach(s => picker.innerHTML += `<option value="${s.id}">${s.ch}</option>`);
+        // 排序按學號末三碼
+        const sorted = [...rawData].filter(s => s.id !== 'empty').sort((a,b) => a.id.slice(-3).localeCompare(b.id.slice(-3)));
+        sorted.forEach(s => {
+            const last3 = s.id.slice(-3);
+            picker.innerHTML += `<option value="${s.id}">${last3} - ${s.ch}</option>`;
+        });
     }
 
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
         document.getElementById('btn-change-mode').classList.toggle('active', isChangingMode);
-        showToast(isChangingMode ? "編輯模式：點擊鎖定座位可【取消鎖定】" : "已回到點名模式");
+        showToast(isChangingMode ? "編輯模式：可指定座位或取消鎖定" : "點名模式");
     }
 
     function handleSeatClick(i, event) {
@@ -108,20 +107,16 @@
         if (sid === 'empty') return;
 
         if (!isChangingMode) {
-            // 點名模式：切換缺席
             attendance[sid] = !attendance[sid]; 
             save(); renderGrid(); updateUI();
             return;
         }
 
-        // 編輯模式
         if (manualFixedIds.includes(sid)) {
-            // 已鎖定 -> 取消指定/鎖定
             manualFixedIds = manualFixedIds.filter(id => id !== sid);
             save(); renderGrid();
             showToast(`已取消鎖定 ${currentLayout[i].ch}`);
         } else {
-            // 未鎖定 -> 開啟挑選清單
             activeSeatIndex = i;
             const picker = document.getElementById('seat-picker');
             picker.style.left = event.pageX + 'px';
@@ -133,10 +128,7 @@
 
     function applySeatPick(sel) {
         const targetId = sel.value;
-        if(!targetId) { 
-            sel.style.opacity = 0; sel.style.pointerEvents = 'none';
-            return; 
-        }
+        if(!targetId) { sel.style.opacity = 0; sel.style.pointerEvents = 'none'; return; }
         
         const oldIdx = currentLayout.findIndex(s => s.id === targetId);
         const targetStudent = rawData.find(s => s.id === targetId);
@@ -150,9 +142,9 @@
         if(!manualFixedIds.includes(targetId)) manualFixedIds.push(targetId);
         
         sel.style.opacity = 0; sel.style.pointerEvents = 'none';
-        sel.value = ""; // 重置選單
+        sel.value = "";
         save(); renderGrid();
-        showToast(`已指定並鎖定 ${targetStudent.ch}`);
+        showToast(`已指定 ${targetStudent.ch}`);
     }
 
     function renderGrid() {
@@ -172,7 +164,6 @@
     }
 
     function shuffleLogic() {
-        // ... (磁鐵群組邏輯與先前版本一致)
         const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
         const pairA = ["1114300124", "1114300136"];
         const pairB = ["1114300126", "1114300502"];
@@ -240,16 +231,14 @@
         document.getElementById('count-a').innerText = 55 - p;
     }
     function resetData() {
-        if(confirm("將清除所有【🔒 手動鎖定】的狀態，並讓所有學生參與排列？")) {
-            manualFixedIds = [];
-            save(); renderGrid();
-            showToast("已解除所有鎖定");
+        if(confirm("解除所有手動鎖定並清空排列？")) {
+            manualFixedIds = []; currentLayout = [...rawData]; save(); renderGrid();
         }
     }
     function exportResult() {
         const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
         const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
-        navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '全員出席'));
+        navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '無'));
         showToast("報表已複製");
     }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
