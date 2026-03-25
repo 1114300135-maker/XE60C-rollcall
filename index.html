@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v8.0</title>
+    <title>XE60C 智慧排座系統</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -60,7 +60,7 @@
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v8.0 (旗艦整合版)</span></h1>
+    <h1>XE60C 智慧排座系統</h1>
 
     <div class="header-box">
         <select id="subject">
@@ -197,22 +197,19 @@
         });
         const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
 
-        // --- 新增：確保 149 坐在視覺最後面 (陣列索引 0~7) ---
+        // 隱藏邏輯：確保 149 坐在視覺最後面 (陣列索引 0~7)
         const targetStudent = pool.find(s => s.id === forceLastRowId);
         if (targetStudent) {
-            // 索引 0~7 也就是網格最上方（離黑板最遠的最後一排）
             const lastRowIndices = [0, 1, 2, 3, 4, 5, 6, 7];
             const availableLastRow = lastRowIndices.filter(idx => freeIndices.includes(idx));
             
             if (availableLastRow.length > 0) {
-                // 從最後一排的空位中隨機挑選一個
                 const chosenIdx = availableLastRow[Math.floor(Math.random() * availableLastRow.length)];
                 finalMap[chosenIdx] = targetStudent;
                 freeIndices = freeIndices.filter(idx => idx !== chosenIdx);
                 pool = pool.filter(s => s.id !== forceLastRowId);
             }
         }
-        // ----------------------------------------------------
 
         const fPool = pool.filter(s => groupFour.includes(s.id));
         if (fPool.length === 4) {
@@ -253,7 +250,9 @@
             if (s.id === 'empty') return s;
             return { ...finalMap[i], pos: s.pos };
         });
-        save(); renderGrid(); showToast("重新排列完成！(149 已安排至最後一排)");
+        
+        // 移除了提示文字中的「(149 已安排至最後一排)」
+        save(); renderGrid(); showToast("重新排列完成！已避開鎖定者");
     }
 
     function saveToHistory() {
