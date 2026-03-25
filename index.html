@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 (Apple 官網風格)</title>
+    <title>XE60C 智慧排座系統</title>
     <style>
-        /* Apple 官網經典色彩變數 */
+        /* 極簡高質感色彩變數 */
         :root { 
-            --apple-bg: #F5F5F7;           /* 經典官網淺灰底色 */
-            --apple-card: #FFFFFF;         /* 純白卡片 */
-            --apple-text: #1D1D1F;         /* 蘋果深灰黑 */
-            --apple-text-sec: #86868B;     /* 次要文字灰 */
-            --apple-blue: #0071E3;         /* Apple 標誌藍 */
+            --apple-bg: #F5F5F7;           
+            --apple-card: #FFFFFF;         
+            --apple-text: #1D1D1F;         
+            --apple-text-sec: #86868B;     
+            --apple-blue: #0071E3;         
             --apple-blue-hover: #0077ED;
             --apple-green: #34C759;
             --apple-red: #FF3B30;
             --apple-border: #D2D2D7;
             --apple-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 0 10px 24px rgba(0, 0, 0, 0.04);
-            --material-bg: rgba(255, 255, 255, 0.72); /* 蘋果毛玻璃背景 */
+            --material-bg: rgba(255, 255, 255, 0.72); 
         }
 
         body { 
@@ -30,13 +30,11 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* 捨棄大外框，改為純淨的流式排版 */
         .container { 
             width: 1050px; 
             margin: 0 auto; 
         }
 
-        /* Apple 官網大標題風格 */
         h1 { 
             text-align: center; 
             color: var(--apple-text); 
@@ -46,7 +44,6 @@
             margin-bottom: 40px; 
         }
         
-        /* 頂部數據列：浮動白卡 */
         .header-box { 
             display: grid; 
             grid-template-columns: 1.8fr 1fr 1fr 1.2fr; 
@@ -59,7 +56,6 @@
             box-shadow: var(--apple-shadow);
         }
 
-        /* 選擇器優化：極簡灰色底 */
         select { 
             padding: 12px 18px; 
             border-radius: 12px; 
@@ -75,7 +71,6 @@
         }
         select:hover { background: rgba(0,0,0,0.08); }
         
-        /* 座位網格區 */
         .seating-chart { 
             display: grid; 
             grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); 
@@ -87,7 +82,6 @@
             box-shadow: var(--apple-shadow);
         }
 
-        /* 簡約白底座位卡片 */
         .seat { 
             background: #FAFAFA; 
             border: 1px solid rgba(0,0,0,0.04); 
@@ -110,13 +104,11 @@
         .seat b { font-size: 1.15rem; font-weight: 600; letter-spacing: 0.3px; }
         .seat span { font-size: 0.85rem; font-weight: 500; margin-top: 4px; color: var(--apple-text-sec); }
 
-        /* 出席/缺席 狀態 */
         .seat.present { background: #EAF8ED; border: 1px solid #A1DFA8; }
         .seat.present span { color: #1E8236; }
         .seat.absent { background: #FFECEB; border: 1px solid #FFB3B0; color: #D70015; }
         .seat.absent span { color: #D70015; }
         
-        /* 鎖定狀態：Apple 藍 */
         .seat.is-manual { border: 1px solid var(--apple-blue); background: #F0F7FF; }
         .seat.is-manual::after { 
             content: '🔒'; position: absolute; top: -6px; right: -6px; 
@@ -127,7 +119,6 @@
         .seat.empty { background: transparent; border: 1px dashed var(--apple-border); cursor: default; }
         .seat.empty:hover { transform: none; box-shadow: none; background: transparent; }
         
-        /* 黑板：俐落的深色膠囊 */
         .blackboard {
             background: var(--apple-text); 
             color: #FFFFFF;
@@ -135,14 +126,13 @@
             padding: 14px;
             margin: 30px auto 10px auto;
             width: 45%;
-            border-radius: 980px; /* 極大圓角 */
+            border-radius: 980px; 
             font-size: 1.1rem;
             font-weight: 600;
             letter-spacing: 12px;
             box-shadow: var(--apple-shadow);
         }
 
-        /* 底部操作區：Apple Material 毛玻璃懸浮列 */
         .footer-controls { 
             margin-top: 40px; 
             display: flex; 
@@ -160,7 +150,6 @@
             z-index: 100;
         }
         
-        /* Apple 官網標準膠囊按鈕 */
         button { 
             border: none; 
             border-radius: 980px; 
@@ -181,7 +170,6 @@
         .btn-edit { background: rgba(0,0,0,0.06); color: var(--apple-text); }
         .btn-edit.active { background: var(--apple-text); color: white; }
 
-        /* 歷史紀錄區 */
         .history-section { margin-top: 50px; padding: 0 10px; }
         .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
         .history-item { 
@@ -204,7 +192,7 @@
 
         #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; box-shadow: var(--apple-shadow); border-radius: 14px; border: 1px solid var(--apple-border); padding: 8px; background: var(--apple-card); }
         
-        /* 動態島 (Dynamic Island) 提示框 - 極致流暢 */
+        /* 動態島提示框 - 無蘋果 Logo */
         #toast { 
             position: fixed; 
             top: 25px; 
@@ -224,10 +212,9 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         #toast.show { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
-        #toast::before { content: ''; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -431,10 +418,11 @@
     function saveToHistory() {
         const now = new Date();
         const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
-        const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
+        
+        // 移除科目的字串組合，只保留時間
         historyRecords.unshift({ 
             id: Date.now(), 
-            name: `${timeStr} (${sub})`, 
+            name: timeStr, 
             layout: [...currentLayout], 
             attendance: {...attendance}, 
             fixedIds: [...manualFixedIds],
@@ -506,7 +494,6 @@
         showToast("缺席名單已複製至剪貼簿");
     }
     
-    // Apple 風格動態島提示
     let toastTimeout;
     function showToast(msg) { 
         const t = document.getElementById('toast'); 
