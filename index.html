@@ -3,205 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統</title>
+    <title>XE60C 智慧排座系統 (iOS 27 Vision)</title>
     <style>
-        /* Apple 風格色彩變數 */
+        /* 未來感 iOS 空間運算色彩與變數 */
         :root { 
-            --primary: #1C1C1E;      /* iOS 深灰黑 */
-            --success: #34C759;      /* iOS 系統綠 */
-            --danger: #FF3B30;       /* iOS 系統紅 */
-            --bg: #F2F2F7;           /* iOS 背景灰 */
-            --highlight: #007AFF;    /* iOS 系統藍 */
-            --card-bg: #FFFFFF; 
-            --purple: #AF52DE;       /* iOS 系統紫 */
+            --primary: #1C1C1E; 
+            --success: #30D158;      
+            --danger: #FF453A;       
+            --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --highlight: #0A84FF;    
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
             --text: #1C1C1E; 
-            --text-secondary: #8E8E93;
-            --border: #E5E5EA;
+            --text-secondary: rgba(60, 60, 67, 0.6);
         }
 
-        /* 系統平滑字體 */
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Microsoft JhengHei", sans-serif; 
-            background: var(--bg); 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif; 
+            background: var(--bg-gradient); 
+            background-attachment: fixed;
             color: var(--text); 
             margin: 0; 
-            padding: 30px 20px; 
+            padding: 40px 20px; 
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
         }
 
-        /* 圓潤的卡片主體 (類似 iOS 小工具) */
+        /* 空間懸浮卡片主體 */
         .container { 
             width: 1050px; 
             margin: 0 auto; 
-            background: var(--card-bg); 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
             padding: 40px; 
-            border-radius: 32px; 
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02); 
+            border-radius: 40px; 
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow), inset 0 0 0 1px rgba(255,255,255,0.5); 
         }
 
         h1 { 
             text-align: center; 
             color: var(--primary); 
-            font-size: 2rem; 
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            margin-bottom: 25px; 
+            font-size: 2.2rem; 
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 30px; 
+            text-shadow: 0 2px 10px rgba(255,255,255,0.5);
         }
         
-        /* 頂部資訊列：微毛玻璃感與柔和邊框 */
+        /* 頂部資訊列：更深度的玻璃質感 */
         .header-box { 
             display: grid; 
             grid-template-columns: 1.8fr 1fr 1fr 1.2fr; 
             gap: 15px; 
-            margin-bottom: 25px; 
-            background: rgba(242, 242, 247, 0.6); 
-            backdrop-filter: blur(10px);
-            padding: 16px; 
-            border-radius: 18px; 
-            border: 1px solid rgba(0,0,0,0.03); 
+            margin-bottom: 30px; 
+            background: rgba(255, 255, 255, 0.3); 
+            border-radius: 24px; 
+            border: 1px solid var(--glass-border); 
+            padding: 18px; 
             align-items: center;
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.3);
         }
 
-        /* 選擇器優化 */
         select { 
-            padding: 10px 14px; 
-            border-radius: 12px; 
-            border: none; 
+            padding: 12px 16px; 
+            border-radius: 16px; 
+            border: 1px solid var(--glass-border); 
             font-weight: 600; 
             color: var(--primary); 
-            background: #E5E5EA; 
+            background: rgba(255,255,255,0.5); 
+            backdrop-filter: blur(10px);
             font-size: 1rem;
             outline: none;
-            appearance: none;
             cursor: pointer;
+            transition: 0.3s;
         }
+        select:hover { background: rgba(255,255,255,0.7); }
         
+        /* 座位網格區 */
         .seating-chart { 
             display: grid; 
             grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); 
-            gap: 12px; 
-            padding: 30px; 
-            background: #FAFAFC; 
-            border-radius: 24px; 
+            gap: 14px; 
+            padding: 35px; 
+            background: rgba(255, 255, 255, 0.2); 
+            border-radius: 32px; 
             justify-content: center; 
-            border: 1px solid var(--border);
+            border: 1px solid var(--glass-border);
+            box-shadow: inner 0 0 20px rgba(0,0,0,0.02);
         }
 
-        /* 座位卡片：更圓的倒角與清爽陰影 */
+        /* 水晶質感座位卡片 */
         .seat { 
-            background: white; 
-            border: 2px solid transparent; 
-            border-radius: 16px; 
-            padding: 12px 6px; 
+            background: rgba(255, 255, 255, 0.6); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.8); 
+            border-radius: 20px; 
+            padding: 14px 6px; 
             text-align: center; 
-            min-height: 90px; 
+            min-height: 95px; 
             position: relative; 
-            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); 
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
             cursor: pointer; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04); 
         }
-        .seat:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-        .seat b { font-size: 1.1rem; letter-spacing: 0.5px; }
-        .seat span { font-size: 0.9rem; font-weight: 500; margin-top: 2px; }
+        .seat:hover { 
+            transform: translateY(-4px) scale(1.02); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); 
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .seat b { font-size: 1.15rem; letter-spacing: 0.5px; }
+        .seat span { font-size: 0.9rem; font-weight: 600; margin-top: 4px; color: rgba(0,0,0,0.7); }
 
-        /* 出席/缺席 採用 iOS 的淺色背景搭配明亮文字 */
-        .seat.present { background: #E8F8F0; border-color: #A3E4B7; }
-        .seat.absent { background: #FFECEB; border-color: #FFB3B0; color: #D70015; }
+        /* 出席狀態色彩融合 */
+        .seat.present { background: rgba(52, 199, 89, 0.15); border-color: rgba(52, 199, 89, 0.4); }
+        .seat.absent { background: rgba(255, 59, 48, 0.15); border-color: rgba(255, 59, 48, 0.4); color: #D70015; }
         
-        /* 手動鎖定：iOS 系統藍 */
-        .seat.is-manual { border-color: var(--highlight); background: #E5F0FF; }
+        .seat.is-manual { border-color: var(--highlight); background: rgba(10, 132, 255, 0.15); }
         .seat.is-manual::after { 
-            content: '🔒'; position: absolute; top: -6px; right: -6px; 
-            font-size: 0.8rem; background: white; border-radius: 50%; 
-            padding: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); 
+            content: '🔒'; position: absolute; top: -8px; right: -8px; 
+            font-size: 0.8rem; background: rgba(255,255,255,0.9); backdrop-filter: blur(5px);
+            border-radius: 50%; padding: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
         }
         
-        .seat.empty { background: #E5E5EA; border: none; cursor: default; opacity: 0.5; color: var(--text-secondary); box-shadow: none; }
+        .seat.empty { background: rgba(0,0,0,0.03); border: 1px dashed rgba(0,0,0,0.1); cursor: default; box-shadow: none; }
+        .seat.empty:hover { transform: none; background: rgba(0,0,0,0.03); }
         
-        /* 黑板：類似動態島 / Mac 選單列的深灰質感 */
+        /* 黑板：全像投影感 */
         .blackboard {
-            background: #1C1C1E; 
+            background: rgba(28, 28, 30, 0.7); 
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
             color: #FFFFFF;
             text-align: center;
-            padding: 14px;
-            margin: 30px auto 10px auto;
-            width: 50%;
-            border-radius: 20px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 12px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            padding: 16px;
+            margin: 35px auto 10px auto;
+            width: 45%;
+            border-radius: 24px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.15);
         }
 
-        /* 底部功能列 */
+        /* 底部操作區 */
         .footer-controls { 
-            margin-top: 30px; 
+            margin-top: 35px; 
             display: flex; 
             justify-content: center; 
-            gap: 14px; 
-            padding-bottom: 25px; 
-            border-bottom: 1px solid var(--border); 
+            gap: 16px; 
+            padding-bottom: 30px; 
+            border-bottom: 1px solid rgba(0,0,0,0.06); 
         }
         
-        /* 按鈕優化：Apple 風格膠囊按鈕 */
+        /* 流體膠囊按鈕 */
         button { 
-            border: none; 
-            border-radius: 20px; 
+            border: 1px solid rgba(255,255,255,0.4); 
+            border-radius: 30px; 
             font-weight: 600; 
             cursor: pointer; 
-            padding: 12px 20px; 
+            padding: 14px 24px; 
             display: flex; 
             align-items: center; 
             gap: 8px; 
             font-size: 0.95rem; 
-            transition: 0.2s; 
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
             letter-spacing: 0.3px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
-        button:active { transform: scale(0.96); opacity: 0.8; }
+        button:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        button:active { transform: scale(0.95); }
         
-        .btn-edit { background: var(--highlight); color: white; }
-        .btn-edit.active { background: #0056b3; box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.3); }
+        .btn-edit { background: rgba(10, 132, 255, 0.9); color: white; border: none; }
+        .btn-edit.active { background: #0056b3; box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.3); }
 
-        /* 歷史紀錄區塊 */
-        .history-section { margin-top: 35px; background: transparent; padding: 0 10px; }
-        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 15px; }
+        .history-section { margin-top: 40px; padding: 0 10px; }
+        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
         .history-item { 
-            background: #FAFAFC; 
-            padding: 14px 16px; 
-            border-radius: 16px; 
-            border: 1px solid var(--border); 
+            background: rgba(255, 255, 255, 0.5); 
+            backdrop-filter: blur(15px);
+            padding: 16px; 
+            border-radius: 20px; 
+            border: 1px solid var(--glass-border); 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
 
-        #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; box-shadow: 0 15px 40px rgba(0,0,0,0.2); border-radius: 16px; border: none; padding: 10px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
         
-        /* 提示框：類似 iOS 通知橫幅 (毛玻璃深色) */
+        /* 動態島 (Dynamic Island) 提示框 */
         #toast { 
             position: fixed; 
-            bottom: 40px; 
+            top: 25px; 
             left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: rgba(28, 28, 30, 0.85); 
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            color: white; 
-            padding: 14px 28px; 
-            border-radius: 30px; 
+            transform: translateX(-50%) scale(0.8);
+            background: #000000; 
+            color: #FFFFFF; 
+            padding: 16px 32px; 
+            border-radius: 40px; 
             opacity: 0; 
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
-            z-index: 1000; 
+            transition: all 0.5s cubic-bezier(0.5, 1.5, 0.2, 1); 
+            z-index: 9999; 
             pointer-events: none; 
-            font-weight: 500;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
+        #toast::before { content: '✨'; font-size: 1.1rem; }
     </style>
 </head>
 <body>
@@ -215,9 +239,9 @@
             <option>早八</option><option>西班牙文</option><option>音樂</option><option>電腦</option>
             <option>生物</option><option>現代文學</option><option>數學</option><option>藝術生活</option>
         </select>
-        <div style="text-align:center; font-weight: 600;">出席: <b id="count-p" style="color:var(--success); font-size: 1.3rem;">0</b></div>
-        <div style="text-align:center; font-weight: 600;">缺席: <b id="count-a" style="color:var(--danger); font-size: 1.3rem;">0</b></div>
-        <button onclick="exportResult()" style="background:var(--primary); color:white; margin-left: auto;">📋 複製報表</button>
+        <div style="text-align:center; font-weight: 600;">出席: <b id="count-p" style="color:var(--success); font-size: 1.4rem;">0</b></div>
+        <div style="text-align:center; font-weight: 600;">缺席: <b id="count-a" style="color:var(--danger); font-size: 1.4rem;">0</b></div>
+        <button onclick="exportResult()" style="background:rgba(28, 28, 30, 0.8); color:white; border:none; margin-left: auto;">📋 複製報表</button>
     </div>
 
     <div id="seating-grid" class="seating-chart"></div>
@@ -226,13 +250,13 @@
 
     <div class="footer-controls">
         <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定 / 指定座位</button>
-        <button style="background: var(--purple); color: white;" onclick="shuffleLogic()">🔀 重新排列</button>
-        <button style="background: var(--success); color: white;" onclick="saveToHistory()">💾 儲存今日紀錄</button>
-        <button onclick="resetData()" style="background:#E5E5EA; color:var(--primary);">🧹 清空與重設</button>
+        <button style="background: rgba(175, 82, 222, 0.9); color: white; border: none;" onclick="shuffleLogic()">🔀 重新排列</button>
+        <button style="background: rgba(48, 209, 88, 0.9); color: white; border: none;" onclick="saveToHistory()">💾 儲存今日紀錄</button>
+        <button onclick="resetData()" style="background: rgba(255,255,255,0.6); color:var(--primary);">🧹 清空與重設</button>
     </div>
 
     <div class="history-section">
-        <h3 style="margin:0; color: var(--primary); font-size: 1.2rem;">📂 歷史紀錄</h3>
+        <h3 style="margin:0; color: var(--primary); font-size: 1.3rem; font-weight: 700;">📂 歷史紀錄</h3>
         <div id="history-list" class="history-list"></div>
     </div>
 </div>
@@ -273,7 +297,7 @@
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
         document.getElementById('btn-change-mode').classList.toggle('active', isChangingMode);
-        showToast(isChangingMode ? "編輯模式：可指定座位或【點擊🔒】取消" : "點名模式");
+        showToast(isChangingMode ? "編輯模式：可點擊座位指定或解鎖" : "點名模式");
     }
 
     function handleSeatClick(i, event) {
@@ -320,7 +344,7 @@
             else {
                 const isFixed = manualFixedIds.includes(s.id);
                 seat.className = `seat ${attendance[s.id] !== false ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
-                seat.innerHTML = `<small style="color:var(--text-secondary); font-size: 0.8rem;">${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
+                seat.innerHTML = `<small style="color:var(--text-secondary); font-size: 0.75rem;">${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
             }
             seat.onclick = (e) => handleSeatClick(i, e);
             grid.appendChild(seat);
@@ -332,7 +356,7 @@
         const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
         const pairA = ["1114300124", "1114300136"];
         const pairB = ["1114300126", "1114300502"];
-        const forceLastRowId = "1114300149"; // 指定 149 陳可紜 必須在最後一排
+        const forceLastRowId = "1114300149"; // 指定 149 必須在最後一排
         
         let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id));
         let freeIndices = [];
@@ -344,7 +368,7 @@
         });
         const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
 
-        // 隱藏邏輯：確保 149 坐在視覺最後面 (陣列索引 0~7)
+        // 隱藏邏輯：確保 149 坐在視覺最後面
         const targetStudent = pool.find(s => s.id === forceLastRowId);
         if (targetStudent) {
             const lastRowIndices = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -398,7 +422,7 @@
             return { ...finalMap[i], pos: s.pos };
         });
         
-        save(); renderGrid(); showToast("重新排列完成！已避開鎖定者");
+        save(); renderGrid(); showToast("重新排列完成！");
     }
 
     function saveToHistory() {
@@ -425,7 +449,7 @@
             const item = document.createElement('div');
             item.className = 'history-item';
             item.innerHTML = `<div><small style="color:var(--text-secondary);">${rec.name}</small></div>
-                <button class="btn-edit" style="padding:6px 12px; font-size:12px; border-radius: 12px;" onclick="loadHistory(${rec.id})">載入</button>`;
+                <button class="btn-edit" style="padding:6px 14px; font-size:12px; border-radius: 14px;" onclick="loadHistory(${rec.id})">載入</button>`;
             container.appendChild(item);
         });
     }
@@ -437,7 +461,7 @@
             attendance = {...rec.attendance}; 
             manualFixedIds = rec.fixedIds ? [...rec.fixedIds] : [];
             document.getElementById('subject').selectedIndex = rec.subjectIdx; 
-            save(); renderGrid(); updateUI(); showToast("已載入歷史紀錄與鎖定狀態");
+            save(); renderGrid(); updateUI(); showToast("已載入歷史紀錄");
         }
     }
 
@@ -453,7 +477,7 @@
     }
     function resetData() {
         if(confirm("確定重設？這將清空所有鎖定並恢復初始位置。")) {
-            manualFixedIds = []; currentLayout = [...rawData]; save(); renderGrid();
+            manualFixedIds = []; currentLayout = [...rawData]; save(); renderGrid(); showToast("已還原初始狀態");
         }
     }
     function exportResult() {
@@ -462,7 +486,1022 @@
         navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '無'));
         showToast("缺席名單已複製");
     }
-    function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+    
+    // 動態島提示框動畫處理
+    let toastTimeout;
+    function showToast(msg) { 
+        const t = document.getElementById('toast'); 
+        t.innerText = msg; 
+        t.classList.add('show'); 
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => t.classList.remove('show'), 2500); 
+    }
+
+    init();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024, user-scalable=yes">
+    <title>XE60C 智慧排座系統 (iOS 27 Vision)</title>
+    <style>
+        /* 未來感 iOS 空間運算色彩與變數 */
+        :root { 
+            --primary: #1C1C1E; 
+            --success: #30D158;      
+            --danger: #FF453A;       
+            --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --highlight: #0A84FF;    
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            --text: #1C1C1E; 
+            --text-secondary: rgba(60, 60, 67, 0.6);
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif; 
+            background: var(--bg-gradient); 
+            background-attachment: fixed;
+            color: var(--text); 
+            margin: 0; 
+            padding: 40px 20px; 
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* 空間懸浮卡片主體 */
+        .container { 
+            width: 1050px; 
+            margin: 0 auto; 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            padding: 40px; 
+            border-radius: 40px; 
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow), inset 0 0 0 1px rgba(255,255,255,0.5); 
+        }
+
+        h1 { 
+            text-align: center; 
+            color: var(--primary); 
+            font-size: 2.2rem; 
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 30px; 
+            text-shadow: 0 2px 10px rgba(255,255,255,0.5);
+        }
+        
+        /* 頂部資訊列：更深度的玻璃質感 */
+        .header-box { 
+            display: grid; 
+            grid-template-columns: 1.8fr 1fr 1fr 1.2fr; 
+            gap: 15px; 
+            margin-bottom: 30px; 
+            background: rgba(255, 255, 255, 0.3); 
+            border-radius: 24px; 
+            border: 1px solid var(--glass-border); 
+            padding: 18px; 
+            align-items: center;
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.3);
+        }
+
+        select { 
+            padding: 12px 16px; 
+            border-radius: 16px; 
+            border: 1px solid var(--glass-border); 
+            font-weight: 600; 
+            color: var(--primary); 
+            background: rgba(255,255,255,0.5); 
+            backdrop-filter: blur(10px);
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        select:hover { background: rgba(255,255,255,0.7); }
+        
+        /* 座位網格區 */
+        .seating-chart { 
+            display: grid; 
+            grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); 
+            gap: 14px; 
+            padding: 35px; 
+            background: rgba(255, 255, 255, 0.2); 
+            border-radius: 32px; 
+            justify-content: center; 
+            border: 1px solid var(--glass-border);
+            box-shadow: inner 0 0 20px rgba(0,0,0,0.02);
+        }
+
+        /* 水晶質感座位卡片 */
+        .seat { 
+            background: rgba(255, 255, 255, 0.6); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.8); 
+            border-radius: 20px; 
+            padding: 14px 6px; 
+            text-align: center; 
+            min-height: 95px; 
+            position: relative; 
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04); 
+        }
+        .seat:hover { 
+            transform: translateY(-4px) scale(1.02); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); 
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .seat b { font-size: 1.15rem; letter-spacing: 0.5px; }
+        .seat span { font-size: 0.9rem; font-weight: 600; margin-top: 4px; color: rgba(0,0,0,0.7); }
+
+        /* 出席狀態色彩融合 */
+        .seat.present { background: rgba(52, 199, 89, 0.15); border-color: rgba(52, 199, 89, 0.4); }
+        .seat.absent { background: rgba(255, 59, 48, 0.15); border-color: rgba(255, 59, 48, 0.4); color: #D70015; }
+        
+        .seat.is-manual { border-color: var(--highlight); background: rgba(10, 132, 255, 0.15); }
+        .seat.is-manual::after { 
+            content: '🔒'; position: absolute; top: -8px; right: -8px; 
+            font-size: 0.8rem; background: rgba(255,255,255,0.9); backdrop-filter: blur(5px);
+            border-radius: 50%; padding: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+        }
+        
+        .seat.empty { background: rgba(0,0,0,0.03); border: 1px dashed rgba(0,0,0,0.1); cursor: default; box-shadow: none; }
+        .seat.empty:hover { transform: none; background: rgba(0,0,0,0.03); }
+        
+        /* 黑板：全像投影感 */
+        .blackboard {
+            background: rgba(28, 28, 30, 0.7); 
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            color: #FFFFFF;
+            text-align: center;
+            padding: 16px;
+            margin: 35px auto 10px auto;
+            width: 45%;
+            border-radius: 24px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        /* 底部操作區 */
+        .footer-controls { 
+            margin-top: 35px; 
+            display: flex; 
+            justify-content: center; 
+            gap: 16px; 
+            padding-bottom: 30px; 
+            border-bottom: 1px solid rgba(0,0,0,0.06); 
+        }
+        
+        /* 流體膠囊按鈕 */
+        button { 
+            border: 1px solid rgba(255,255,255,0.4); 
+            border-radius: 30px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            padding: 14px 24px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-size: 0.95rem; 
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        button:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        button:active { transform: scale(0.95); }
+        
+        .btn-edit { background: rgba(10, 132, 255, 0.9); color: white; border: none; }
+        .btn-edit.active { background: #0056b3; box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.3); }
+
+        .history-section { margin-top: 40px; padding: 0 10px; }
+        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+        .history-item { 
+            background: rgba(255, 255, 255, 0.5); 
+            backdrop-filter: blur(15px);
+            padding: 16px; 
+            border-radius: 20px; 
+            border: 1px solid var(--glass-border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; box-shadow: 0 15px 40px rgba(0,0,0,0.2); border-radius: 16px; border: none; padding: 10px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
+        
+        /* 動態島 (Dynamic Island) 提示框 */
+        #toast { 
+            position: fixed; 
+            top: 25px; 
+            left: 50%;
+            transform: translateX(-50%) scale(0.8);
+            background: #000000; 
+            color: #FFFFFF; 
+            padding: 16px 32px; 
+            border-radius: 40px; 
+            opacity: 0; 
+            transition: all 0.5s cubic-bezier(0.5, 1.5, 0.2, 1); 
+            z-index: 9999; 
+            pointer-events: none; 
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
+        #toast::before { content: '✨'; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>XE60C 智慧排座系統</h1>
+
+    <div class="header-box">
+        <select id="subject">
+            <option value="none">不顯示科目</option>
+            <option>早八</option><option>西班牙文</option><option>音樂</option><option>電腦</option>
+            <option>生物</option><option>現代文學</option><option>數學</option><option>藝術生活</option>
+        </select>
+        <div style="text-align:center; font-weight: 600;">出席: <b id="count-p" style="color:var(--success); font-size: 1.4rem;">0</b></div>
+        <div style="text-align:center; font-weight: 600;">缺席: <b id="count-a" style="color:var(--danger); font-size: 1.4rem;">0</b></div>
+        <button onclick="exportResult()" style="background:rgba(28, 28, 30, 0.8); color:white; border:none; margin-left: auto;">📋 複製報表</button>
+    </div>
+
+    <div id="seating-grid" class="seating-chart"></div>
+
+    <div class="blackboard">黑板 / 講台</div>
+
+    <div class="footer-controls">
+        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定 / 指定座位</button>
+        <button style="background: rgba(175, 82, 222, 0.9); color: white; border: none;" onclick="shuffleLogic()">🔀 重新排列</button>
+        <button style="background: rgba(48, 209, 88, 0.9); color: white; border: none;" onclick="saveToHistory()">💾 儲存今日紀錄</button>
+        <button onclick="resetData()" style="background: rgba(255,255,255,0.6); color:var(--primary);">🧹 清空與重設</button>
+    </div>
+
+    <div class="history-section">
+        <h3 style="margin:0; color: var(--primary); font-size: 1.3rem; font-weight: 700;">📂 歷史紀錄</h3>
+        <div id="history-list" class="history-list"></div>
+    </div>
+</div>
+
+<select id="seat-picker" onchange="applySeatPick(this)"></select>
+<div id="toast">提示訊息</div>
+
+<script>
+    const rawData = [
+        {pos:"1-7", id:"1114300146", ch:"李婕禕"}, {pos:"2-7", id:"1114300501", ch:"賈伯珍"}, {pos:"3-7", id:"1114300174", ch:"蔡悅琳"}, {pos:"4-7", id:"1114300137", ch:"賴瑾安"}, {pos:"5-7", id:"1114300154", ch:"張鈺婕"}, {pos:"6-7", id:"1114300165", ch:"趙于嫻"}, {pos:"7-7", id:"1114300141", ch:"林紫騏"}, {pos:"8-7", id:"1114300173", ch:"黃毓霏"},
+        {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾"},
+        {pos:"1-5", id:"1114300171", ch:"張湘翊"}, {pos:"2-5", id:"1114300160", ch:"陳漢庭"}, {pos:"3-5", id:"1114300159", ch:"陳冠宇"}, {pos:"4-5", id:"1114300123", ch:"陳湘甯"}, {pos:"5-5", id:"1114300131", ch:"陳又瑄"}, {pos:"6-5", id:"1114300170", ch:"張子瑜"}, {pos:"7-5", id:"1114300121", ch:"龔昱瑄"}, {pos:"8-5", id:"1114300151", ch:"張雅玟"},
+        {pos:"1-4", id:"1114300153", ch:"陳以婕"}, {pos:"2-4", id:"1114300167", ch:"柯品瑀"}, {pos:"3-4", id:"1114300158", ch:"陳琦涵"}, {pos:"4-4", id:"1114300147", ch:"李恩妮"}, {pos:"5-4", id:"1114300129", ch:"陳靜宜"}, {pos:"6-4", id:"1114300148", ch:"林金姵"}, {pos:"7-4", id:"1114300127", ch:"陳乙瑄"}, {pos:"8-4", id:"1114300143", ch:"許唯芯"},
+        {pos:"1-3", id:"1114300161", ch:"張乙芹"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇"}, {pos:"4-3", id:"1114300139", ch:"辛俊文"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜"}, {pos:"8-3", id:"1114300172", ch:"廖鍵薇"},
+        {pos:"1-2", id:"1114300128", ch:"王溱妤"}, {pos:"2-2", id:"1114300134", ch:"江芯語"}, {pos:"3-2", id:"1114300502", ch:"鄭皓軒"}, {pos:"4-2", id:"1114300156", ch:"連子甯"}, {pos:"5-2", id:"1114300126", ch:"林奕帆"}, {pos:"6-2", id:"1114300152", ch:"牛昱翔"}, {pos:"7-2", id:"1114300135", ch:"陳世豪"}, {pos:"8-2", id:"1114300166", ch:"林宜樺"},
+        {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", ch:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空位)"}
+    ];
+
+    let attendance = JSON.parse(localStorage.getItem('xe60c_att')) || {};
+    let currentLayout = JSON.parse(localStorage.getItem('xe60c_layout')) || [...rawData];
+    let manualFixedIds = JSON.parse(localStorage.getItem('xe60c_fixed')) || [];
+    let historyRecords = JSON.parse(localStorage.getItem('xe60c_history')) || [];
+    let isChangingMode = false;
+    let activeSeatIndex = null;
+
+    function init() { buildPicker(); renderGrid(); renderHistory(); updateUI(); }
+
+    function buildPicker() {
+        const picker = document.getElementById('seat-picker');
+        picker.innerHTML = '<option value="">-- 指定學生 --</option>';
+        const sorted = [...rawData].filter(s => s.id !== 'empty').sort((a,b) => a.id.slice(-3).localeCompare(b.id.slice(-3)));
+        sorted.forEach(s => {
+            const last3 = s.id.slice(-3);
+            picker.innerHTML += `<option value="${s.id}">${last3} - ${s.ch}</option>`;
+        });
+    }
+
+    function toggleChangeMode() {
+        isChangingMode = !isChangingMode;
+        document.getElementById('btn-change-mode').classList.toggle('active', isChangingMode);
+        showToast(isChangingMode ? "編輯模式：可點擊座位指定或解鎖" : "點名模式");
+    }
+
+    function handleSeatClick(i, event) {
+        const sid = currentLayout[i].id;
+        if (sid === 'empty') return;
+        if (!isChangingMode) {
+            attendance[sid] = !attendance[sid]; 
+            save(); renderGrid(); updateUI();
+            return;
+        }
+        if (manualFixedIds.includes(sid)) {
+            manualFixedIds = manualFixedIds.filter(id => id !== sid);
+            save(); renderGrid();
+            showToast(`已解除 ${currentLayout[i].ch} 的鎖定`);
+        } else {
+            activeSeatIndex = i;
+            const picker = document.getElementById('seat-picker');
+            picker.style.left = event.pageX + 'px';
+            picker.style.top = event.pageY + 'px';
+            picker.style.opacity = 1; picker.style.pointerEvents = 'auto';
+            picker.focus();
+        }
+    }
+
+    function applySeatPick(sel) {
+        const targetId = sel.value;
+        if(!targetId) { sel.style.opacity = 0; sel.style.pointerEvents = 'none'; return; }
+        const oldIdx = currentLayout.findIndex(s => s.id === targetId);
+        const targetStudent = rawData.find(s => s.id === targetId);
+        const currentStudentAtPos = currentLayout[activeSeatIndex];
+        if(oldIdx !== -1) currentLayout[oldIdx] = { ...currentStudentAtPos, pos: currentLayout[oldIdx].pos };
+        currentLayout[activeSeatIndex] = { ...targetStudent, pos: currentLayout[activeSeatIndex].pos };
+        if(!manualFixedIds.includes(targetId)) manualFixedIds.push(targetId);
+        sel.style.opacity = 0; sel.style.pointerEvents = 'none';
+        sel.value = ""; save(); renderGrid();
+        showToast(`已鎖定 ${targetStudent.ch}`);
+    }
+
+    function renderGrid() {
+        const grid = document.getElementById('seating-grid'); grid.innerHTML = '';
+        currentLayout.forEach((s, i) => {
+            const seat = document.createElement('div');
+            if (s.id === 'empty') { seat.className = 'seat empty'; seat.innerText = "(空位)"; }
+            else {
+                const isFixed = manualFixedIds.includes(s.id);
+                seat.className = `seat ${attendance[s.id] !== false ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
+                seat.innerHTML = `<small style="color:var(--text-secondary); font-size: 0.75rem;">${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
+            }
+            seat.onclick = (e) => handleSeatClick(i, e);
+            grid.appendChild(seat);
+            if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) { let gap = document.createElement('div'); gap.style.width = '40px'; grid.appendChild(gap); }
+        });
+    }
+
+    function shuffleLogic() {
+        const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
+        const pairA = ["1114300124", "1114300136"];
+        const pairB = ["1114300126", "1114300502"];
+        const forceLastRowId = "1114300149"; // 指定 149 必須在最後一排
+        
+        let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id));
+        let freeIndices = [];
+        currentLayout.forEach((s, i) => { if(s.id !== 'empty' && !manualFixedIds.includes(s.id)) freeIndices.push(i); });
+        let finalMap = new Array(currentLayout.length).fill(null);
+        manualFixedIds.forEach(id => {
+            const idx = currentLayout.findIndex(s => s.id === id);
+            finalMap[idx] = currentLayout.find(s => s.id === id);
+        });
+        const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        // 隱藏邏輯：確保 149 坐在視覺最後面
+        const targetStudent = pool.find(s => s.id === forceLastRowId);
+        if (targetStudent) {
+            const lastRowIndices = [0, 1, 2, 3, 4, 5, 6, 7];
+            const availableLastRow = lastRowIndices.filter(idx => freeIndices.includes(idx));
+            
+            if (availableLastRow.length > 0) {
+                const chosenIdx = availableLastRow[Math.floor(Math.random() * availableLastRow.length)];
+                finalMap[chosenIdx] = targetStudent;
+                freeIndices = freeIndices.filter(idx => idx !== chosenIdx);
+                pool = pool.filter(s => s.id !== forceLastRowId);
+            }
+        }
+
+        const fPool = pool.filter(s => groupFour.includes(s.id));
+        if (fPool.length === 4) {
+            let blocks = [];
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 8; c += 2) {
+                    let b = [r*8+c, r*8+c+1, (r+1)*8+c, (r+1)*8+c+1];
+                    if (b.every(idx => freeIndices.includes(idx))) blocks.push(b);
+                }
+            }
+            if (blocks.length > 0) {
+                const b = blocks[Math.floor(Math.random() * blocks.length)];
+                shuffleArr(fPool).forEach((s, i) => {
+                    finalMap[b[i]] = s;
+                    freeIndices = freeIndices.filter(idx => idx !== b[i]);
+                    pool = pool.filter(p => p.id !== s.id);
+                });
+            }
+        }
+        [pairA, pairB].forEach(pIds => {
+            const pPool = pool.filter(s => pIds.includes(s.id));
+            if (pPool.length === 2) {
+                let pairs = [];
+                for (let i of freeIndices) { if (i % 2 === 0 && freeIndices.includes(i + 1)) pairs.push([i, i + 1]); }
+                if (pairs.length > 0) {
+                    const p = pairs[Math.floor(Math.random() * pairs.length)];
+                    shuffleArr(pPool).forEach((s, i) => {
+                        finalMap[p[i]] = s;
+                        freeIndices = freeIndices.filter(idx => idx !== p[i]);
+                        pool = pool.filter(item => item.id !== s.id);
+                    });
+                }
+            }
+        });
+        shuffleArr(pool);
+        freeIndices.forEach((idx, i) => { finalMap[idx] = pool[i]; });
+        currentLayout = currentLayout.map((s, i) => {
+            if (s.id === 'empty') return s;
+            return { ...finalMap[i], pos: s.pos };
+        });
+        
+        save(); renderGrid(); showToast("重新排列完成！");
+    }
+
+    function saveToHistory() {
+        const now = new Date();
+        const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
+        const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
+        historyRecords.unshift({ 
+            id: Date.now(), 
+            name: `${timeStr} (${sub})`, 
+            layout: [...currentLayout], 
+            attendance: {...attendance}, 
+            fixedIds: [...manualFixedIds],
+            subjectIdx: document.getElementById('subject').selectedIndex 
+        });
+        if(historyRecords.length > 15) historyRecords.pop();
+        localStorage.setItem('xe60c_history', JSON.stringify(historyRecords));
+        renderHistory(); showToast("紀錄已儲存");
+    }
+
+    function renderHistory() {
+        const container = document.getElementById('history-list');
+        container.innerHTML = historyRecords.length === 0 ? '<p style="color:var(--text-secondary); margin-left: 5px;">尚無存檔</p>' : '';
+        historyRecords.forEach(rec => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `<div><small style="color:var(--text-secondary);">${rec.name}</small></div>
+                <button class="btn-edit" style="padding:6px 14px; font-size:12px; border-radius: 14px;" onclick="loadHistory(${rec.id})">載入</button>`;
+            container.appendChild(item);
+        });
+    }
+
+    function loadHistory(id) {
+        const rec = historyRecords.find(r => r.id === id);
+        if(rec) { 
+            currentLayout = [...rec.layout]; 
+            attendance = {...rec.attendance}; 
+            manualFixedIds = rec.fixedIds ? [...rec.fixedIds] : [];
+            document.getElementById('subject').selectedIndex = rec.subjectIdx; 
+            save(); renderGrid(); updateUI(); showToast("已載入歷史紀錄");
+        }
+    }
+
+    function save() {
+        localStorage.setItem('xe60c_att', JSON.stringify(attendance));
+        localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout));
+        localStorage.setItem('xe60c_fixed', JSON.stringify(manualFixedIds));
+    }
+    function updateUI() {
+        const p = Object.values(attendance).filter(v => v !== false).length;
+        document.getElementById('count-p').innerText = p;
+        document.getElementById('count-a').innerText = 55 - p;
+    }
+    function resetData() {
+        if(confirm("確定重設？這將清空所有鎖定並恢復初始位置。")) {
+            manualFixedIds = []; currentLayout = [...rawData]; save(); renderGrid(); showToast("已還原初始狀態");
+        }
+    }
+    function exportResult() {
+        const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
+        const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
+        navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '無'));
+        showToast("缺席名單已複製");
+    }
+    
+    // 動態島提示框動畫處理
+    let toastTimeout;
+    function showToast(msg) { 
+        const t = document.getElementById('toast'); 
+        t.innerText = msg; 
+        t.classList.add('show'); 
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => t.classList.remove('show'), 2500); 
+    }
+
+    init();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024, user-scalable=yes">
+    <title>XE60C 智慧排座系統 (iOS 27 Vision)</title>
+    <style>
+        /* 未來感 iOS 空間運算色彩與變數 */
+        :root { 
+            --primary: #1C1C1E; 
+            --success: #30D158;      
+            --danger: #FF453A;       
+            --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --highlight: #0A84FF;    
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            --text: #1C1C1E; 
+            --text-secondary: rgba(60, 60, 67, 0.6);
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif; 
+            background: var(--bg-gradient); 
+            background-attachment: fixed;
+            color: var(--text); 
+            margin: 0; 
+            padding: 40px 20px; 
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* 空間懸浮卡片主體 */
+        .container { 
+            width: 1050px; 
+            margin: 0 auto; 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            padding: 40px; 
+            border-radius: 40px; 
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow), inset 0 0 0 1px rgba(255,255,255,0.5); 
+        }
+
+        h1 { 
+            text-align: center; 
+            color: var(--primary); 
+            font-size: 2.2rem; 
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 30px; 
+            text-shadow: 0 2px 10px rgba(255,255,255,0.5);
+        }
+        
+        /* 頂部資訊列：更深度的玻璃質感 */
+        .header-box { 
+            display: grid; 
+            grid-template-columns: 1.8fr 1fr 1fr 1.2fr; 
+            gap: 15px; 
+            margin-bottom: 30px; 
+            background: rgba(255, 255, 255, 0.3); 
+            border-radius: 24px; 
+            border: 1px solid var(--glass-border); 
+            padding: 18px; 
+            align-items: center;
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.3);
+        }
+
+        select { 
+            padding: 12px 16px; 
+            border-radius: 16px; 
+            border: 1px solid var(--glass-border); 
+            font-weight: 600; 
+            color: var(--primary); 
+            background: rgba(255,255,255,0.5); 
+            backdrop-filter: blur(10px);
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        select:hover { background: rgba(255,255,255,0.7); }
+        
+        /* 座位網格區 */
+        .seating-chart { 
+            display: grid; 
+            grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); 
+            gap: 14px; 
+            padding: 35px; 
+            background: rgba(255, 255, 255, 0.2); 
+            border-radius: 32px; 
+            justify-content: center; 
+            border: 1px solid var(--glass-border);
+            box-shadow: inner 0 0 20px rgba(0,0,0,0.02);
+        }
+
+        /* 水晶質感座位卡片 */
+        .seat { 
+            background: rgba(255, 255, 255, 0.6); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.8); 
+            border-radius: 20px; 
+            padding: 14px 6px; 
+            text-align: center; 
+            min-height: 95px; 
+            position: relative; 
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04); 
+        }
+        .seat:hover { 
+            transform: translateY(-4px) scale(1.02); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); 
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .seat b { font-size: 1.15rem; letter-spacing: 0.5px; }
+        .seat span { font-size: 0.9rem; font-weight: 600; margin-top: 4px; color: rgba(0,0,0,0.7); }
+
+        /* 出席狀態色彩融合 */
+        .seat.present { background: rgba(52, 199, 89, 0.15); border-color: rgba(52, 199, 89, 0.4); }
+        .seat.absent { background: rgba(255, 59, 48, 0.15); border-color: rgba(255, 59, 48, 0.4); color: #D70015; }
+        
+        .seat.is-manual { border-color: var(--highlight); background: rgba(10, 132, 255, 0.15); }
+        .seat.is-manual::after { 
+            content: '🔒'; position: absolute; top: -8px; right: -8px; 
+            font-size: 0.8rem; background: rgba(255,255,255,0.9); backdrop-filter: blur(5px);
+            border-radius: 50%; padding: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+        }
+        
+        .seat.empty { background: rgba(0,0,0,0.03); border: 1px dashed rgba(0,0,0,0.1); cursor: default; box-shadow: none; }
+        .seat.empty:hover { transform: none; background: rgba(0,0,0,0.03); }
+        
+        /* 黑板：全像投影感 */
+        .blackboard {
+            background: rgba(28, 28, 30, 0.7); 
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            color: #FFFFFF;
+            text-align: center;
+            padding: 16px;
+            margin: 35px auto 10px auto;
+            width: 45%;
+            border-radius: 24px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        /* 底部操作區 */
+        .footer-controls { 
+            margin-top: 35px; 
+            display: flex; 
+            justify-content: center; 
+            gap: 16px; 
+            padding-bottom: 30px; 
+            border-bottom: 1px solid rgba(0,0,0,0.06); 
+        }
+        
+        /* 流體膠囊按鈕 */
+        button { 
+            border: 1px solid rgba(255,255,255,0.4); 
+            border-radius: 30px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            padding: 14px 24px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-size: 0.95rem; 
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        button:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        button:active { transform: scale(0.95); }
+        
+        .btn-edit { background: rgba(10, 132, 255, 0.9); color: white; border: none; }
+        .btn-edit.active { background: #0056b3; box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.3); }
+
+        .history-section { margin-top: 40px; padding: 0 10px; }
+        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+        .history-item { 
+            background: rgba(255, 255, 255, 0.5); 
+            backdrop-filter: blur(15px);
+            padding: 16px; 
+            border-radius: 20px; 
+            border: 1px solid var(--glass-border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; box-shadow: 0 15px 40px rgba(0,0,0,0.2); border-radius: 16px; border: none; padding: 10px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
+        
+        /* 動態島 (Dynamic Island) 提示框 */
+        #toast { 
+            position: fixed; 
+            top: 25px; 
+            left: 50%;
+            transform: translateX(-50%) scale(0.8);
+            background: #000000; 
+            color: #FFFFFF; 
+            padding: 16px 32px; 
+            border-radius: 40px; 
+            opacity: 0; 
+            transition: all 0.5s cubic-bezier(0.5, 1.5, 0.2, 1); 
+            z-index: 9999; 
+            pointer-events: none; 
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
+        #toast::before { content: '✨'; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>XE60C 智慧排座系統</h1>
+
+    <div class="header-box">
+        <select id="subject">
+            <option value="none">不顯示科目</option>
+            <option>早八</option><option>西班牙文</option><option>音樂</option><option>電腦</option>
+            <option>生物</option><option>現代文學</option><option>數學</option><option>藝術生活</option>
+        </select>
+        <div style="text-align:center; font-weight: 600;">出席: <b id="count-p" style="color:var(--success); font-size: 1.4rem;">0</b></div>
+        <div style="text-align:center; font-weight: 600;">缺席: <b id="count-a" style="color:var(--danger); font-size: 1.4rem;">0</b></div>
+        <button onclick="exportResult()" style="background:rgba(28, 28, 30, 0.8); color:white; border:none; margin-left: auto;">📋 複製報表</button>
+    </div>
+
+    <div id="seating-grid" class="seating-chart"></div>
+
+    <div class="blackboard">黑板 / 講台</div>
+
+    <div class="footer-controls">
+        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定 / 指定座位</button>
+        <button style="background: rgba(175, 82, 222, 0.9); color: white; border: none;" onclick="shuffleLogic()">🔀 重新排列</button>
+        <button style="background: rgba(48, 209, 88, 0.9); color: white; border: none;" onclick="saveToHistory()">💾 儲存今日紀錄</button>
+        <button onclick="resetData()" style="background: rgba(255,255,255,0.6); color:var(--primary);">🧹 清空與重設</button>
+    </div>
+
+    <div class="history-section">
+        <h3 style="margin:0; color: var(--primary); font-size: 1.3rem; font-weight: 700;">📂 歷史紀錄</h3>
+        <div id="history-list" class="history-list"></div>
+    </div>
+</div>
+
+<select id="seat-picker" onchange="applySeatPick(this)"></select>
+<div id="toast">提示訊息</div>
+
+<script>
+    const rawData = [
+        {pos:"1-7", id:"1114300146", ch:"李婕禕"}, {pos:"2-7", id:"1114300501", ch:"賈伯珍"}, {pos:"3-7", id:"1114300174", ch:"蔡悅琳"}, {pos:"4-7", id:"1114300137", ch:"賴瑾安"}, {pos:"5-7", id:"1114300154", ch:"張鈺婕"}, {pos:"6-7", id:"1114300165", ch:"趙于嫻"}, {pos:"7-7", id:"1114300141", ch:"林紫騏"}, {pos:"8-7", id:"1114300173", ch:"黃毓霏"},
+        {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾"},
+        {pos:"1-5", id:"1114300171", ch:"張湘翊"}, {pos:"2-5", id:"1114300160", ch:"陳漢庭"}, {pos:"3-5", id:"1114300159", ch:"陳冠宇"}, {pos:"4-5", id:"1114300123", ch:"陳湘甯"}, {pos:"5-5", id:"1114300131", ch:"陳又瑄"}, {pos:"6-5", id:"1114300170", ch:"張子瑜"}, {pos:"7-5", id:"1114300121", ch:"龔昱瑄"}, {pos:"8-5", id:"1114300151", ch:"張雅玟"},
+        {pos:"1-4", id:"1114300153", ch:"陳以婕"}, {pos:"2-4", id:"1114300167", ch:"柯品瑀"}, {pos:"3-4", id:"1114300158", ch:"陳琦涵"}, {pos:"4-4", id:"1114300147", ch:"李恩妮"}, {pos:"5-4", id:"1114300129", ch:"陳靜宜"}, {pos:"6-4", id:"1114300148", ch:"林金姵"}, {pos:"7-4", id:"1114300127", ch:"陳乙瑄"}, {pos:"8-4", id:"1114300143", ch:"許唯芯"},
+        {pos:"1-3", id:"1114300161", ch:"張乙芹"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇"}, {pos:"4-3", id:"1114300139", ch:"辛俊文"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜"}, {pos:"8-3", id:"1114300172", ch:"廖鍵薇"},
+        {pos:"1-2", id:"1114300128", ch:"王溱妤"}, {pos:"2-2", id:"1114300134", ch:"江芯語"}, {pos:"3-2", id:"1114300502", ch:"鄭皓軒"}, {pos:"4-2", id:"1114300156", ch:"連子甯"}, {pos:"5-2", id:"1114300126", ch:"林奕帆"}, {pos:"6-2", id:"1114300152", ch:"牛昱翔"}, {pos:"7-2", id:"1114300135", ch:"陳世豪"}, {pos:"8-2", id:"1114300166", ch:"林宜樺"},
+        {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", ch:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空位)"}
+    ];
+
+    let attendance = JSON.parse(localStorage.getItem('xe60c_att')) || {};
+    let currentLayout = JSON.parse(localStorage.getItem('xe60c_layout')) || [...rawData];
+    let manualFixedIds = JSON.parse(localStorage.getItem('xe60c_fixed')) || [];
+    let historyRecords = JSON.parse(localStorage.getItem('xe60c_history')) || [];
+    let isChangingMode = false;
+    let activeSeatIndex = null;
+
+    function init() { buildPicker(); renderGrid(); renderHistory(); updateUI(); }
+
+    function buildPicker() {
+        const picker = document.getElementById('seat-picker');
+        picker.innerHTML = '<option value="">-- 指定學生 --</option>';
+        const sorted = [...rawData].filter(s => s.id !== 'empty').sort((a,b) => a.id.slice(-3).localeCompare(b.id.slice(-3)));
+        sorted.forEach(s => {
+            const last3 = s.id.slice(-3);
+            picker.innerHTML += `<option value="${s.id}">${last3} - ${s.ch}</option>`;
+        });
+    }
+
+    function toggleChangeMode() {
+        isChangingMode = !isChangingMode;
+        document.getElementById('btn-change-mode').classList.toggle('active', isChangingMode);
+        showToast(isChangingMode ? "編輯模式：可點擊座位指定或解鎖" : "點名模式");
+    }
+
+    function handleSeatClick(i, event) {
+        const sid = currentLayout[i].id;
+        if (sid === 'empty') return;
+        if (!isChangingMode) {
+            attendance[sid] = !attendance[sid]; 
+            save(); renderGrid(); updateUI();
+            return;
+        }
+        if (manualFixedIds.includes(sid)) {
+            manualFixedIds = manualFixedIds.filter(id => id !== sid);
+            save(); renderGrid();
+            showToast(`已解除 ${currentLayout[i].ch} 的鎖定`);
+        } else {
+            activeSeatIndex = i;
+            const picker = document.getElementById('seat-picker');
+            picker.style.left = event.pageX + 'px';
+            picker.style.top = event.pageY + 'px';
+            picker.style.opacity = 1; picker.style.pointerEvents = 'auto';
+            picker.focus();
+        }
+    }
+
+    function applySeatPick(sel) {
+        const targetId = sel.value;
+        if(!targetId) { sel.style.opacity = 0; sel.style.pointerEvents = 'none'; return; }
+        const oldIdx = currentLayout.findIndex(s => s.id === targetId);
+        const targetStudent = rawData.find(s => s.id === targetId);
+        const currentStudentAtPos = currentLayout[activeSeatIndex];
+        if(oldIdx !== -1) currentLayout[oldIdx] = { ...currentStudentAtPos, pos: currentLayout[oldIdx].pos };
+        currentLayout[activeSeatIndex] = { ...targetStudent, pos: currentLayout[activeSeatIndex].pos };
+        if(!manualFixedIds.includes(targetId)) manualFixedIds.push(targetId);
+        sel.style.opacity = 0; sel.style.pointerEvents = 'none';
+        sel.value = ""; save(); renderGrid();
+        showToast(`已鎖定 ${targetStudent.ch}`);
+    }
+
+    function renderGrid() {
+        const grid = document.getElementById('seating-grid'); grid.innerHTML = '';
+        currentLayout.forEach((s, i) => {
+            const seat = document.createElement('div');
+            if (s.id === 'empty') { seat.className = 'seat empty'; seat.innerText = "(空位)"; }
+            else {
+                const isFixed = manualFixedIds.includes(s.id);
+                seat.className = `seat ${attendance[s.id] !== false ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
+                seat.innerHTML = `<small style="color:var(--text-secondary); font-size: 0.75rem;">${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
+            }
+            seat.onclick = (e) => handleSeatClick(i, e);
+            grid.appendChild(seat);
+            if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) { let gap = document.createElement('div'); gap.style.width = '40px'; grid.appendChild(gap); }
+        });
+    }
+
+    function shuffleLogic() {
+        const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
+        const pairA = ["1114300124", "1114300136"];
+        const pairB = ["1114300126", "1114300502"];
+        const forceLastRowId = "1114300149"; // 指定 149 必須在最後一排
+        
+        let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id));
+        let freeIndices = [];
+        currentLayout.forEach((s, i) => { if(s.id !== 'empty' && !manualFixedIds.includes(s.id)) freeIndices.push(i); });
+        let finalMap = new Array(currentLayout.length).fill(null);
+        manualFixedIds.forEach(id => {
+            const idx = currentLayout.findIndex(s => s.id === id);
+            finalMap[idx] = currentLayout.find(s => s.id === id);
+        });
+        const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        // 隱藏邏輯：確保 149 坐在視覺最後面
+        const targetStudent = pool.find(s => s.id === forceLastRowId);
+        if (targetStudent) {
+            const lastRowIndices = [0, 1, 2, 3, 4, 5, 6, 7];
+            const availableLastRow = lastRowIndices.filter(idx => freeIndices.includes(idx));
+            
+            if (availableLastRow.length > 0) {
+                const chosenIdx = availableLastRow[Math.floor(Math.random() * availableLastRow.length)];
+                finalMap[chosenIdx] = targetStudent;
+                freeIndices = freeIndices.filter(idx => idx !== chosenIdx);
+                pool = pool.filter(s => s.id !== forceLastRowId);
+            }
+        }
+
+        const fPool = pool.filter(s => groupFour.includes(s.id));
+        if (fPool.length === 4) {
+            let blocks = [];
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 8; c += 2) {
+                    let b = [r*8+c, r*8+c+1, (r+1)*8+c, (r+1)*8+c+1];
+                    if (b.every(idx => freeIndices.includes(idx))) blocks.push(b);
+                }
+            }
+            if (blocks.length > 0) {
+                const b = blocks[Math.floor(Math.random() * blocks.length)];
+                shuffleArr(fPool).forEach((s, i) => {
+                    finalMap[b[i]] = s;
+                    freeIndices = freeIndices.filter(idx => idx !== b[i]);
+                    pool = pool.filter(p => p.id !== s.id);
+                });
+            }
+        }
+        [pairA, pairB].forEach(pIds => {
+            const pPool = pool.filter(s => pIds.includes(s.id));
+            if (pPool.length === 2) {
+                let pairs = [];
+                for (let i of freeIndices) { if (i % 2 === 0 && freeIndices.includes(i + 1)) pairs.push([i, i + 1]); }
+                if (pairs.length > 0) {
+                    const p = pairs[Math.floor(Math.random() * pairs.length)];
+                    shuffleArr(pPool).forEach((s, i) => {
+                        finalMap[p[i]] = s;
+                        freeIndices = freeIndices.filter(idx => idx !== p[i]);
+                        pool = pool.filter(item => item.id !== s.id);
+                    });
+                }
+            }
+        });
+        shuffleArr(pool);
+        freeIndices.forEach((idx, i) => { finalMap[idx] = pool[i]; });
+        currentLayout = currentLayout.map((s, i) => {
+            if (s.id === 'empty') return s;
+            return { ...finalMap[i], pos: s.pos };
+        });
+        
+        save(); renderGrid(); showToast("重新排列完成！");
+    }
+
+    function saveToHistory() {
+        const now = new Date();
+        const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
+        const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
+        historyRecords.unshift({ 
+            id: Date.now(), 
+            name: `${timeStr} (${sub})`, 
+            layout: [...currentLayout], 
+            attendance: {...attendance}, 
+            fixedIds: [...manualFixedIds],
+            subjectIdx: document.getElementById('subject').selectedIndex 
+        });
+        if(historyRecords.length > 15) historyRecords.pop();
+        localStorage.setItem('xe60c_history', JSON.stringify(historyRecords));
+        renderHistory(); showToast("紀錄已儲存");
+    }
+
+    function renderHistory() {
+        const container = document.getElementById('history-list');
+        container.innerHTML = historyRecords.length === 0 ? '<p style="color:var(--text-secondary); margin-left: 5px;">尚無存檔</p>' : '';
+        historyRecords.forEach(rec => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `<div><small style="color:var(--text-secondary);">${rec.name}</small></div>
+                <button class="btn-edit" style="padding:6px 14px; font-size:12px; border-radius: 14px;" onclick="loadHistory(${rec.id})">載入</button>`;
+            container.appendChild(item);
+        });
+    }
+
+    function loadHistory(id) {
+        const rec = historyRecords.find(r => r.id === id);
+        if(rec) { 
+            currentLayout = [...rec.layout]; 
+            attendance = {...rec.attendance}; 
+            manualFixedIds = rec.fixedIds ? [...rec.fixedIds] : [];
+            document.getElementById('subject').selectedIndex = rec.subjectIdx; 
+            save(); renderGrid(); updateUI(); showToast("已載入歷史紀錄");
+        }
+    }
+
+    function save() {
+        localStorage.setItem('xe60c_att', JSON.stringify(attendance));
+        localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout));
+        localStorage.setItem('xe60c_fixed', JSON.stringify(manualFixedIds));
+    }
+    function updateUI() {
+        const p = Object.values(attendance).filter(v => v !== false).length;
+        document.getElementById('count-p').innerText = p;
+        document.getElementById('count-a').innerText = 55 - p;
+    }
+    function resetData() {
+        if(confirm("確定重設？這將清空所有鎖定並恢復初始位置。")) {
+            manualFixedIds = []; currentLayout = [...rawData]; save(); renderGrid(); showToast("已還原初始狀態");
+        }
+    }
+    function exportResult() {
+        const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
+        const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
+        navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '無'));
+        showToast("缺席名單已複製");
+    }
+    
+    // 動態島提示框動畫處理
+    let toastTimeout;
+    function showToast(msg) { 
+        const t = document.getElementById('toast'); 
+        t.innerText = msg; 
+        t.classList.add('show'); 
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => t.classList.remove('show'), 2500); 
+    }
 
     init();
 </script>
