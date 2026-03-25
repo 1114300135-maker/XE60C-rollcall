@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v7.0</title>
+    <title>XE60C 智慧排座系統 v7.5</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -16,38 +16,34 @@
         
         .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 10px; padding: 25px; background: #f1f5f9; border-radius: 20px; justify-content: center; }
         .seat { background: white; border: 2px solid transparent; border-radius: 12px; padding: 10px 5px; text-align: center; min-height: 90px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .seat:hover { transform: scale(1.02); z-index: 10; }
         .seat.present { background: #ecfdf5; border-color: #a7f3d0; }
         .seat.absent { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
-        .seat.is-manual { border-color: var(--highlight); background: #eff6ff; }
-        .seat.is-manual::after { content: '🔒'; position: absolute; top: -5px; right: -5px; font-size: 0.8rem; background: white; border-radius: 50%; padding: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-        .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.4; }
         
+        /* 鎖定狀態樣式 */
+        .seat.is-manual { border-color: var(--highlight); background: #eff6ff; box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.1); }
+        .seat.is-manual::after { content: '🔒'; position: absolute; top: -5px; right: -5px; font-size: 0.85rem; background: white; border-radius: 50%; padding: 2px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+        
+        .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.4; }
         .header-box { display: grid; grid-template-columns: 1.8fr 1fr 1fr 1.2fr; gap: 15px; margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
         .footer-controls { margin-top: 25px; display: flex; justify-content: center; gap: 12px; padding-bottom: 20px; border-bottom: 2px dashed var(--border); }
         
-        .history-section { margin-top: 30px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
-        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-top: 15px; }
-        .history-item { background: white; padding: 12px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-
         button { border: none; border-radius: 10px; font-weight: bold; cursor: pointer; padding: 10px 16px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem; transition: 0.2s; }
         .btn-save { background: var(--success); color: white; }
         .btn-shuffle { background: var(--purple); color: white; }
         .btn-edit { background: var(--highlight); color: white; }
-        .btn-edit.active { background: var(--primary); outline: 4px solid rgba(59, 130, 246, 0.4); }
+        .btn-edit.active { background: var(--primary); outline: 4px solid rgba(59, 130, 246, 0.4); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
 
         select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); background: white; }
+        #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; }
         #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
         #toast.show { opacity: 1; }
-
-        /* 隱藏的原生 Select 用於選人 */
-        #seat-picker { position: absolute; opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v7.0 (指定席版)</span></h1>
+    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v7.5 (鎖定管理版)</span></h1>
 
     <div class="header-box">
         <select id="subject">
@@ -66,13 +62,10 @@
         <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定 / 指定座位</button>
         <button class="btn-shuffle" onclick="shuffleLogic()">🔀 重新排列</button>
         <button class="btn-save" onclick="saveToHistory()">💾 儲存今日紀錄</button>
-        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 恢復初始排列</button>
+        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 清空所有鎖定</button>
     </div>
 
-    <div class="history-section">
-        <h3 style="margin:0; color: var(--primary);">📂 歷史紀錄</h3>
-        <div id="history-list" class="history-list"></div>
-    </div>
+    <div id="history-list" style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;"></div>
 </div>
 
 <select id="seat-picker" onchange="applySeatPick(this)"></select>
@@ -92,15 +85,14 @@
     let attendance = JSON.parse(localStorage.getItem('xe60c_att')) || {};
     let currentLayout = JSON.parse(localStorage.getItem('xe60c_layout')) || [...rawData];
     let manualFixedIds = JSON.parse(localStorage.getItem('xe60c_fixed')) || [];
-    let historyRecords = JSON.parse(localStorage.getItem('xe60c_history')) || [];
     let isChangingMode = false;
     let activeSeatIndex = null;
 
-    function init() { buildPicker(); renderGrid(); renderHistory(); updateUI(); }
+    function init() { buildPicker(); renderGrid(); updateUI(); }
 
     function buildPicker() {
         const picker = document.getElementById('seat-picker');
-        picker.innerHTML = '<option value="">-- 選擇學生 --</option>';
+        picker.innerHTML = '<option value="">-- 指定學生 --</option>';
         const sorted = [...rawData].filter(s => s.id !== 'empty').sort((a,b) => a.ch.localeCompare(b.ch, 'zh-Hant'));
         sorted.forEach(s => picker.innerHTML += `<option value="${s.id}">${s.ch}</option>`);
     }
@@ -108,49 +100,59 @@
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
         document.getElementById('btn-change-mode').classList.toggle('active', isChangingMode);
-        if(!isChangingMode) showToast("已退出編輯模式");
-        else showToast("請點擊座位指定學生或鎖定");
+        showToast(isChangingMode ? "編輯模式：點擊鎖定座位可【取消鎖定】" : "已回到點名模式");
     }
 
-    function handleSeatClick(i) {
+    function handleSeatClick(i, event) {
+        const sid = currentLayout[i].id;
+        if (sid === 'empty') return;
+
         if (!isChangingMode) {
-            const sid = currentLayout[i].id;
-            if(sid === 'empty') return;
+            // 點名模式：切換缺席
             attendance[sid] = !attendance[sid]; 
             save(); renderGrid(); updateUI();
             return;
         }
-        activeSeatIndex = i;
-        const picker = document.getElementById('seat-picker');
-        picker.style.left = event.pageX + 'px';
-        picker.style.top = event.pageY + 'px';
-        picker.click(); // 試圖觸發原生選單
-        // 因為部分瀏覽器安全限制，這裡顯示 picker 並讓它獲取焦點
-        picker.style.opacity = 1; picker.style.pointerEvents = 'auto';
-        picker.focus();
+
+        // 編輯模式
+        if (manualFixedIds.includes(sid)) {
+            // 已鎖定 -> 取消指定/鎖定
+            manualFixedIds = manualFixedIds.filter(id => id !== sid);
+            save(); renderGrid();
+            showToast(`已取消鎖定 ${currentLayout[i].ch}`);
+        } else {
+            // 未鎖定 -> 開啟挑選清單
+            activeSeatIndex = i;
+            const picker = document.getElementById('seat-picker');
+            picker.style.left = event.pageX + 'px';
+            picker.style.top = event.pageY + 'px';
+            picker.style.opacity = 1; picker.style.pointerEvents = 'auto';
+            picker.focus();
+        }
     }
 
     function applySeatPick(sel) {
         const targetId = sel.value;
-        if(!targetId) return;
+        if(!targetId) { 
+            sel.style.opacity = 0; sel.style.pointerEvents = 'none';
+            return; 
+        }
         
-        // 1. 找這學生現在在哪，跟當前位置交換
         const oldIdx = currentLayout.findIndex(s => s.id === targetId);
         const targetStudent = rawData.find(s => s.id === targetId);
         const currentStudentAtPos = currentLayout[activeSeatIndex];
 
         if(oldIdx !== -1) {
-            // 交換位置
             currentLayout[oldIdx] = { ...currentStudentAtPos, pos: currentLayout[oldIdx].pos };
         }
         currentLayout[activeSeatIndex] = { ...targetStudent, pos: currentLayout[activeSeatIndex].pos };
 
-        // 2. 自動鎖定該學生
         if(!manualFixedIds.includes(targetId)) manualFixedIds.push(targetId);
         
         sel.style.opacity = 0; sel.style.pointerEvents = 'none';
+        sel.value = ""; // 重置選單
         save(); renderGrid();
-        showToast(`已指定 ${targetStudent.ch} 並鎖定`);
+        showToast(`已指定並鎖定 ${targetStudent.ch}`);
     }
 
     function renderGrid() {
@@ -163,13 +165,14 @@
                 seat.className = `seat ${attendance[s.id] !== false ? 'present' : 'absent'} ${isFixed ? 'is-manual' : ''}`;
                 seat.innerHTML = `<small style="color:#94a3b8">${s.pos}</small><b>${s.id.slice(-3)}</b><span>${s.ch}</span>`;
             }
-            seat.onclick = (e) => handleSeatClick(i);
+            seat.onclick = (e) => handleSeatClick(i, e);
             grid.appendChild(seat);
             if ((i + 1) % 8 !== 0 && (i + 1) % 2 === 0) { let gap = document.createElement('div'); gap.style.width = '40px'; grid.appendChild(gap); }
         });
     }
 
     function shuffleLogic() {
+        // ... (磁鐵群組邏輯與先前版本一致)
         const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
         const pairA = ["1114300124", "1114300136"];
         const pairB = ["1114300126", "1114300502"];
@@ -184,7 +187,6 @@
         });
         const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
 
-        // 磁鐵群組邏輯 (略過已被鎖定的人)
         const fPool = pool.filter(s => groupFour.includes(s.id));
         if (fPool.length === 4) {
             let blocks = [];
@@ -224,33 +226,7 @@
             if (s.id === 'empty') return s;
             return { ...finalMap[i], pos: s.pos };
         });
-        save(); renderGrid(); showToast("重新排列完成（鎖定者位置固定）");
-    }
-
-    function saveToHistory() {
-        const now = new Date();
-        const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
-        const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
-        historyRecords.unshift({ id: Date.now(), name: `${dateStr} (${sub})`, layout: [...currentLayout], attendance: {...attendance}, subjectIdx: document.getElementById('subject').selectedIndex });
-        if(historyRecords.length > 20) historyRecords.pop();
-        localStorage.setItem('xe60c_history', JSON.stringify(historyRecords));
-        renderHistory(); showToast("已存檔紀錄");
-    }
-
-    function renderHistory() {
-        const container = document.getElementById('history-list');
-        container.innerHTML = historyRecords.length === 0 ? '<p style="color:#94a3b8;">尚無存檔</p>' : '';
-        historyRecords.forEach(rec => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            item.innerHTML = `<div><strong>${rec.name}</strong></div><div><button class="btn-edit" style="padding:4px 8px;font-size:12px" onclick="loadHistory(${rec.id})">載入</button></div>`;
-            container.appendChild(item);
-        });
-    }
-
-    function loadHistory(id) {
-        const rec = historyRecords.find(r => r.id === id);
-        if(rec) { currentLayout = [...rec.layout]; attendance = {...rec.attendance}; document.getElementById('subject').selectedIndex = rec.subjectIdx; save(); renderGrid(); updateUI(); }
+        save(); renderGrid(); showToast("重新排列完成！");
     }
 
     function save() {
@@ -264,13 +240,17 @@
         document.getElementById('count-a').innerText = 55 - p;
     }
     function resetData() {
-        if(confirm("重設所有位置？")) { currentLayout = [...rawData]; manualFixedIds = []; save(); renderGrid(); }
+        if(confirm("將清除所有【🔒 手動鎖定】的狀態，並讓所有學生參與排列？")) {
+            manualFixedIds = [];
+            save(); renderGrid();
+            showToast("已解除所有鎖定");
+        }
     }
     function exportResult() {
-        const subText = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
+        const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
         const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
-        navigator.clipboard.writeText(`【${subText}】缺席：` + (list.join(', ') || '無'));
-        showToast("已複製報表");
+        navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '全員出席'));
+        showToast("報表已複製");
     }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
