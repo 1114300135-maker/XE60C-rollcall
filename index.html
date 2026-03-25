@@ -25,7 +25,7 @@
         .seat.empty { background: #e2e8f0; border: 2px dashed #cbd5e1; cursor: default; opacity: 0.4; }
         .header-box { display: grid; grid-template-columns: 1.8fr 1fr 1fr 1.2fr; gap: 15px; margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
         
-        /* 新增的黑板樣式 */
+        /* 黑板樣式 */
         .blackboard {
             background: #1e293b; 
             color: #f8fafc;
@@ -185,6 +185,7 @@
         const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
         const pairA = ["1114300124", "1114300136"];
         const pairB = ["1114300126", "1114300502"];
+        const forceLastRowId = "1114300149"; // 指定 149 陳可紜 必須在最後一排
         
         let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id));
         let freeIndices = [];
@@ -195,6 +196,23 @@
             finalMap[idx] = currentLayout.find(s => s.id === id);
         });
         const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        // --- 新增：確保 149 坐在視覺最後面 (陣列索引 0~7) ---
+        const targetStudent = pool.find(s => s.id === forceLastRowId);
+        if (targetStudent) {
+            // 索引 0~7 也就是網格最上方（離黑板最遠的最後一排）
+            const lastRowIndices = [0, 1, 2, 3, 4, 5, 6, 7];
+            const availableLastRow = lastRowIndices.filter(idx => freeIndices.includes(idx));
+            
+            if (availableLastRow.length > 0) {
+                // 從最後一排的空位中隨機挑選一個
+                const chosenIdx = availableLastRow[Math.floor(Math.random() * availableLastRow.length)];
+                finalMap[chosenIdx] = targetStudent;
+                freeIndices = freeIndices.filter(idx => idx !== chosenIdx);
+                pool = pool.filter(s => s.id !== forceLastRowId);
+            }
+        }
+        // ----------------------------------------------------
 
         const fPool = pool.filter(s => groupFour.includes(s.id));
         if (fPool.length === 4) {
@@ -235,7 +253,7 @@
             if (s.id === 'empty') return s;
             return { ...finalMap[i], pos: s.pos };
         });
-        save(); renderGrid(); showToast("重新排列完成！已避開鎖定者");
+        save(); renderGrid(); showToast("重新排列完成！(149 已安排至最後一排)");
     }
 
     function saveToHistory() {
