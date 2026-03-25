@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v7.8</title>
+    <title>XE60C 智慧排座系統 v8.0</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -30,8 +30,11 @@
         .btn-edit { background: var(--highlight); color: white; }
         .btn-edit.active { background: var(--primary); outline: 4px solid rgba(59, 130, 246, 0.4); }
 
-        /* 選單樣式：稍微加寬以容納學號 */
-        select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); background: white; min-width: 150px; }
+        .history-section { margin-top: 30px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
+        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-top: 15px; }
+        .history-item { background: white; padding: 12px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+
+        select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); background: white; }
         #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; }
         #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
         #toast.show { opacity: 1; }
@@ -40,7 +43,7 @@
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v7.8 (學號辨識版)</span></h1>
+    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v8.0 (旗艦整合版)</span></h1>
 
     <div class="header-box">
         <select id="subject">
@@ -58,7 +61,13 @@
     <div class="footer-controls">
         <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定 / 指定座位</button>
         <button style="background: var(--purple); color: white;" onclick="shuffleLogic()">🔀 重新排列</button>
-        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 清空鎖定</button>
+        <button style="background: var(--success); color: white;" onclick="saveToHistory()">💾 儲存今日紀錄</button>
+        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 清空鎖定與重設</button>
+    </div>
+
+    <div class="history-section">
+        <h3 style="margin:0; color: var(--primary);">📂 歷史紀錄 (含座位鎖定狀態)</h3>
+        <div id="history-list" class="history-list"></div>
     </div>
 </div>
 
@@ -79,16 +88,15 @@
     let attendance = JSON.parse(localStorage.getItem('xe60c_att')) || {};
     let currentLayout = JSON.parse(localStorage.getItem('xe60c_layout')) || [...rawData];
     let manualFixedIds = JSON.parse(localStorage.getItem('xe60c_fixed')) || [];
+    let historyRecords = JSON.parse(localStorage.getItem('xe60c_history')) || [];
     let isChangingMode = false;
     let activeSeatIndex = null;
 
-    function init() { buildPicker(); renderGrid(); updateUI(); }
+    function init() { buildPicker(); renderGrid(); renderHistory(); updateUI(); }
 
-    // --- 關鍵修改：顯示學號後三碼 ---
     function buildPicker() {
         const picker = document.getElementById('seat-picker');
         picker.innerHTML = '<option value="">-- 指定學生 --</option>';
-        // 排序按學號末三碼
         const sorted = [...rawData].filter(s => s.id !== 'empty').sort((a,b) => a.id.slice(-3).localeCompare(b.id.slice(-3)));
         sorted.forEach(s => {
             const last3 = s.id.slice(-3);
@@ -99,23 +107,21 @@
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
         document.getElementById('btn-change-mode').classList.toggle('active', isChangingMode);
-        showToast(isChangingMode ? "編輯模式：可指定座位或取消鎖定" : "點名模式");
+        showToast(isChangingMode ? "編輯模式：可指定座位或【點擊🔒】取消" : "點名模式");
     }
 
     function handleSeatClick(i, event) {
         const sid = currentLayout[i].id;
         if (sid === 'empty') return;
-
         if (!isChangingMode) {
             attendance[sid] = !attendance[sid]; 
             save(); renderGrid(); updateUI();
             return;
         }
-
         if (manualFixedIds.includes(sid)) {
             manualFixedIds = manualFixedIds.filter(id => id !== sid);
             save(); renderGrid();
-            showToast(`已取消鎖定 ${currentLayout[i].ch}`);
+            showToast(`已解除 ${currentLayout[i].ch} 的鎖定`);
         } else {
             activeSeatIndex = i;
             const picker = document.getElementById('seat-picker');
@@ -129,22 +135,15 @@
     function applySeatPick(sel) {
         const targetId = sel.value;
         if(!targetId) { sel.style.opacity = 0; sel.style.pointerEvents = 'none'; return; }
-        
         const oldIdx = currentLayout.findIndex(s => s.id === targetId);
         const targetStudent = rawData.find(s => s.id === targetId);
         const currentStudentAtPos = currentLayout[activeSeatIndex];
-
-        if(oldIdx !== -1) {
-            currentLayout[oldIdx] = { ...currentStudentAtPos, pos: currentLayout[oldIdx].pos };
-        }
+        if(oldIdx !== -1) currentLayout[oldIdx] = { ...currentStudentAtPos, pos: currentLayout[oldIdx].pos };
         currentLayout[activeSeatIndex] = { ...targetStudent, pos: currentLayout[activeSeatIndex].pos };
-
         if(!manualFixedIds.includes(targetId)) manualFixedIds.push(targetId);
-        
         sel.style.opacity = 0; sel.style.pointerEvents = 'none';
-        sel.value = "";
-        save(); renderGrid();
-        showToast(`已指定 ${targetStudent.ch}`);
+        sel.value = ""; save(); renderGrid();
+        showToast(`已鎖定 ${targetStudent.ch}`);
     }
 
     function renderGrid() {
@@ -217,7 +216,47 @@
             if (s.id === 'empty') return s;
             return { ...finalMap[i], pos: s.pos };
         });
-        save(); renderGrid(); showToast("重新排列完成！");
+        save(); renderGrid(); showToast("重新排列完成！已避開鎖定者");
+    }
+
+    function saveToHistory() {
+        const now = new Date();
+        const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
+        const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
+        historyRecords.unshift({ 
+            id: Date.now(), 
+            name: `${timeStr} (${sub})`, 
+            layout: [...currentLayout], 
+            attendance: {...attendance}, 
+            fixedIds: [...manualFixedIds],
+            subjectIdx: document.getElementById('subject').selectedIndex 
+        });
+        if(historyRecords.length > 15) historyRecords.pop();
+        localStorage.setItem('xe60c_history', JSON.stringify(historyRecords));
+        renderHistory(); showToast("紀錄已儲存");
+    }
+
+    function renderHistory() {
+        const container = document.getElementById('history-list');
+        container.innerHTML = historyRecords.length === 0 ? '<p style="color:#94a3b8;">尚無存檔</p>' : '';
+        historyRecords.forEach(rec => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `<div><small>${rec.name}</small></div>
+                <button class="btn-edit" style="padding:4px 8px;font-size:12px" onclick="loadHistory(${rec.id})">載入</button>`;
+            container.appendChild(item);
+        });
+    }
+
+    function loadHistory(id) {
+        const rec = historyRecords.find(r => r.id === id);
+        if(rec) { 
+            currentLayout = [...rec.layout]; 
+            attendance = {...rec.attendance}; 
+            manualFixedIds = rec.fixedIds ? [...rec.fixedIds] : [];
+            document.getElementById('subject').selectedIndex = rec.subjectIdx; 
+            save(); renderGrid(); updateUI(); showToast("已載入歷史紀錄與鎖定狀態");
+        }
     }
 
     function save() {
@@ -231,7 +270,7 @@
         document.getElementById('count-a').innerText = 55 - p;
     }
     function resetData() {
-        if(confirm("解除所有手動鎖定並清空排列？")) {
+        if(confirm("確定重設？這將清空所有鎖定並恢復初始位置。")) {
             manualFixedIds = []; currentLayout = [...rawData]; save(); renderGrid();
         }
     }
@@ -239,7 +278,7 @@
         const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
         const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
         navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '無'));
-        showToast("報表已複製");
+        showToast("缺席名單已複製");
     }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
