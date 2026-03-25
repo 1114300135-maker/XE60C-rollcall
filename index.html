@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v4.8</title>
+    <title>XE60C 智慧排座系統 v4.9</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -35,19 +35,21 @@
         .btn-edit { background: var(--highlight); color: white; }
         .btn-edit.active { background: var(--primary); outline: 4px solid rgba(59, 130, 246, 0.2); }
         
-        select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); outline: none; }
+        select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); outline: none; background: white; }
         
-        #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: 0.3s; z-index: 1000; }
+        #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
         #toast.show { opacity: 1; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v4.8</span></h1>
+    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v4.9</span></h1>
 
     <div class="header-box">
         <select id="subject">
+            <option value="none">不顯示</option>
+            <option>早八</option>
             <option>西班牙文</option>
             <option>音樂</option>
             <option>電腦</option>
@@ -64,9 +66,9 @@
     <div id="seating-grid" class="seating-chart"></div>
 
     <div class="footer-controls">
-        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定</button>
-        <button class="btn-shuffle" onclick="shuffleLogic()">🔀 隨機打亂 (保留所有規定)</button>
-        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 恢復照片初始排列</button>
+        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定位置</button>
+        <button class="btn-shuffle" onclick="shuffleLogic()">🔀 隨機大風吹</button>
+        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 恢復照片排列</button>
     </div>
 </div>
 
@@ -190,7 +192,7 @@
             return { ...finalMap[i], pos: s.pos };
         });
 
-        save(); renderGrid(); showToast("換座位完成！已考慮科目與好友需求。");
+        save(); renderGrid(); showToast("大風吹完成！");
     }
 
     function save() {
@@ -206,14 +208,19 @@
     function resetData() {
         if(confirm("將座位恢復至照片的初始狀態？")) {
             currentLayout = [...rawData]; manualFixedIds = [];
-            save(); renderGrid(); showToast("已重設為初始位置");
+            save(); renderGrid(); showToast("已還原初始設定");
         }
     }
     function exportResult() {
-        const sub = document.getElementById('subject').value;
+        const subElem = document.getElementById('subject');
+        const subValue = subElem.value;
+        const subText = subElem.options[subElem.selectedIndex].text;
+        
         const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
-        navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '全員出席'));
-        showToast("缺席報表已複製");
+        let header = subValue === "none" ? "缺席名單：" : `【${subText}】缺席名單：`;
+        
+        navigator.clipboard.writeText(header + (list.join(', ') || '全員出席'));
+        showToast("報表已複製");
     }
 
     init();
