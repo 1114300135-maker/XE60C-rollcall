@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v9.0</title>
+    <title>XE60C 智慧排座系統 v9.1</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -43,7 +43,7 @@
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v9.0 (149 特製版)</span></h1>
+    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v9.1 (149 前排鎖定版)</span></h1>
 
     <div class="header-box">
         <select id="subject">
@@ -66,7 +66,7 @@
     </div>
 
     <div class="history-section">
-        <h3 style="margin:0; color: var(--primary);">📂 歷史紀錄 (含後排設定)</h3>
+        <h3 style="margin:0; color: var(--primary);">📂 歷史紀錄 (含 149 優先位)</h3>
         <div id="history-list" class="history-list"></div>
     </div>
 </div>
@@ -82,9 +82,10 @@
         {pos:"1-4", id:"1114300153", ch:"陳以婕"}, {pos:"2-4", id:"1114300167", ch:"柯品瑀"}, {pos:"3-4", id:"1114300158", ch:"陳琦涵"}, {pos:"4-4", id:"1114300147", ch:"李恩妮"}, {pos:"5-4", id:"1114300129", ch:"陳靜宜"}, {pos:"6-4", id:"1114300148", ch:"林金姵"}, {pos:"7-4", id:"1114300127", ch:"陳乙瑄"}, {pos:"8-4", id:"1114300143", ch:"許唯芯"},
         {pos:"1-3", id:"1114300161", ch:"張乙芹"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇"}, {pos:"4-3", id:"1114300139", ch:"辛俊文"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜"}, {pos:"8-3", id:"1114300172", ch:"廖鍵薇"},
         {pos:"1-2", id:"1114300128", ch:"王溱妤"}, {pos:"2-2", id:"1114300134", ch:"江芯語"}, {pos:"3-2", id:"1114300502", ch:"鄭皓軒"}, {pos:"4-2", id:"1114300156", ch:"連子甯"}, {pos:"5-2", id:"1114300126", ch:"林奕帆"}, {pos:"6-2", id:"1114300152", ch:"牛昱翔"}, {pos:"7-2", id:"1114300135", ch:"陳世豪"}, {pos:"8-2", id:"1114300166", ch:"林宜樺"},
-        {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", ch:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空位)"}
+        {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", col:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空位)"}
     ];
 
+    // 初始化與變數
     let attendance = JSON.parse(localStorage.getItem('xe60c_att')) || {};
     let currentLayout = JSON.parse(localStorage.getItem('xe60c_layout')) || [...rawData];
     let manualFixedIds = JSON.parse(localStorage.getItem('xe60c_fixed')) || [];
@@ -99,15 +100,14 @@
         picker.innerHTML = '<option value="">-- 指定學生 --</option>';
         const sorted = [...rawData].filter(s => s.id !== 'empty').sort((a,b) => a.ch.localeCompare(b.ch, 'zh-Hant'));
         sorted.forEach(s => {
-            const last3 = s.id.slice(-3);
-            picker.innerHTML += `<option value="${s.id}">${s.ch} - ${last3}</option>`;
+            picker.innerHTML += `<option value="${s.id}">${s.ch} - ${s.id.slice(-3)}</option>`;
         });
     }
 
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
         document.getElementById('btn-change-mode').classList.toggle('active', isChangingMode);
-        showToast(isChangingMode ? "編輯模式：可指定座位或取消鎖定" : "點名模式");
+        showToast(isChangingMode ? "編輯模式：可指定座位" : "點名模式");
     }
 
     function handleSeatClick(i, event) {
@@ -163,54 +163,41 @@
     }
 
     function shuffleLogic() {
-        // --- 核心邏輯：強制讓 149 陳可紜 留在最後一排 ---
-        const lastRowIndices = [48, 49, 50, 51, 52, 53, 54, 55]; // 對應 1-1 到 8-1
-        const specialStudentId = "1114300149"; // 陳可紜
-
-        let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id) && s.id !== specialStudentId);
+        // --- 核心修改：讓 149 (陳可紜) 坐在最前排 ---
+        const firstRowIndices = [0, 1, 2, 3, 4, 5, 6, 7]; // 座位 1-7 到 8-7
+        const specialId = "1114300149";
+        
+        let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id) && s.id !== specialId);
         let freeIndices = [];
         currentLayout.forEach((s, i) => { if(s.id !== 'empty' && !manualFixedIds.includes(s.id)) freeIndices.push(i); });
         
         let finalMap = new Array(currentLayout.length).fill(null);
-        
-        // 1. 先放鎖定的人
+        const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        // 1. 先放手動鎖定的人
         manualFixedIds.forEach(id => {
             const idx = currentLayout.findIndex(s => s.id === id);
             finalMap[idx] = currentLayout.find(s => s.id === id);
         });
 
-        const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
-
-        // 2. 處理 149 (如果她沒被手動鎖定)
-        if (!manualFixedIds.includes(specialStudentId)) {
-            const student149 = rawData.find(s => s.id === specialStudentId);
-            // 找出最後一排且目前沒被鎖定的位置
-            let availableInLastRow = lastRowIndices.filter(idx => freeIndices.includes(idx));
-            if (availableInLastRow.length > 0) {
-                const targetIdx = availableInLastRow[Math.floor(Math.random() * availableInLastRow.length)];
-                finalMap[targetIdx] = student149;
+        // 2. 處理 149 (如果她沒被手動鎖定在別處)
+        if (!manualFixedIds.includes(specialId)) {
+            const s149 = rawData.find(s => s.id === specialId);
+            // 找出最前排中目前可用的空位
+            let availableInFirstRow = firstRowIndices.filter(idx => freeIndices.includes(idx));
+            if (availableInFirstRow.length > 0) {
+                const targetIdx = availableInFirstRow[Math.floor(Math.random() * availableInFirstRow.length)];
+                finalMap[targetIdx] = s149;
+                freeIndices = freeIndices.filter(idx => idx !== targetIdx);
+            } else {
+                // 如果最前排全被手動鎖定了，只好在剩下的空位隨機放
+                const targetIdx = freeIndices[Math.floor(Math.random() * freeIndices.length)];
+                finalMap[targetIdx] = s149;
                 freeIndices = freeIndices.filter(idx => idx !== targetIdx);
             }
         }
 
-        // 3. 處理磁鐵群組
-        const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
-        const pairA = ["1114300124", "1114300136"];
-        const pairB = ["1114300126", "1114300502"];
-
-        // 磁鐵組排列 (簡略版邏輯同前)
-        [groupFour, pairA, pairB].forEach(group => {
-            let gPool = pool.filter(s => group.includes(s.id));
-            if (gPool.length > 0) {
-                shuffleArr(gPool).forEach(s => {
-                    const idx = freeIndices.shift();
-                    finalMap[idx] = s;
-                    pool = pool.filter(p => p.id !== s.id);
-                });
-            }
-        });
-
-        // 4. 剩下的人填入剩餘空位
+        // 3. 剩下的人填入
         shuffleArr(pool);
         freeIndices.forEach((idx, i) => { finalMap[idx] = pool[i]; });
 
@@ -218,8 +205,8 @@
             if (s.id === 'empty') return s;
             return { ...finalMap[i], pos: s.pos };
         });
-        
-        save(); renderGrid(); showToast("排列完成！149 已安排至後排");
+
+        save(); renderGrid(); showToast("已重新排列，149 已安排至前排");
     }
 
     function saveToHistory() {
@@ -234,12 +221,12 @@
             subjectIdx: document.getElementById('subject').selectedIndex 
         });
         localStorage.setItem('xe60c_history', JSON.stringify(historyRecords));
-        renderHistory(); showToast("歷史紀錄儲存成功");
+        renderHistory(); showToast("紀錄已儲存");
     }
 
     function renderHistory() {
         const container = document.getElementById('history-list');
-        container.innerHTML = historyRecords.length === 0 ? '<p>尚無存檔</p>' : '';
+        container.innerHTML = historyRecords.length === 0 ? '<p>尚無紀錄</p>' : '';
         historyRecords.slice(0, 10).forEach(rec => {
             const item = document.createElement('div');
             item.className = 'history-item';
@@ -250,10 +237,10 @@
 
     function loadHistory(id) {
         const rec = historyRecords.find(r => r.id === id);
-        if(rec) { 
+        if(rec) {
             currentLayout = [...rec.layout]; attendance = {...rec.attendance}; 
             manualFixedIds = rec.fixedIds || [];
-            document.getElementById('subject').selectedIndex = rec.subjectIdx; 
+            document.getElementById('subject').selectedIndex = rec.subjectIdx;
             save(); renderGrid(); updateUI();
         }
     }
@@ -269,14 +256,12 @@
         document.getElementById('count-a').innerText = 55 - p;
     }
     function resetData() {
-        if(confirm("重設所有位置與鎖定？")) {
-            manualFixedIds = []; currentLayout = [...rawData]; save(); renderGrid();
-        }
+        if(confirm("確定重設？")) { manualFixedIds = []; currentLayout = [...rawData]; save(); renderGrid(); }
     }
     function exportResult() {
         const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
         const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
-        navigator.clipboard.writeText(`【${sub}】缺席：` + (list.join(', ') || '無'));
+        navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '無'));
         showToast("報表已複製");
     }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
