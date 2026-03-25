@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v5.0</title>
+    <title>XE60C 智慧排座系統 v6.0</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
             --bg: #f8fafc; --highlight: #3b82f6; --card-bg: #ffffff; 
             --purple: #8b5cf6; --text: #1e293b; --border: #e2e8f0;
         }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
-        .container { width: 1050px; margin: 20px auto; background: var(--card-bg); padding: 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { width: 1050px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
         h1 { text-align: center; color: var(--primary); font-size: 1.8rem; margin-bottom: 20px; }
         
         /* 座位表配置 */
         .seating-chart { display: grid; grid-template-columns: repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px) 40px repeat(2, 105px); gap: 10px; padding: 25px; background: #f1f5f9; border-radius: 20px; justify-content: center; }
         .seat { background: white; border: 2px solid transparent; border-radius: 12px; padding: 10px 5px; text-align: center; min-height: 90px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        
         .seat.present { background: #ecfdf5; border-color: #a7f3d0; }
         .seat.absent { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
         .seat.is-manual { border-color: var(--highlight); }
@@ -26,17 +25,24 @@
         
         /* 控制面板 */
         .header-box { display: grid; grid-template-columns: 1.8fr 1fr 1fr 1.2fr; gap: 15px; margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
-        .footer-controls { margin-top: 25px; display: flex; justify-content: center; gap: 12px; }
+        .footer-controls { margin-top: 25px; display: flex; justify-content: center; gap: 12px; padding-bottom: 20px; border-bottom: 2px dashed var(--border); }
         
-        button { border: none; border-radius: 10px; font-weight: bold; cursor: pointer; padding: 12px 20px; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; transition: 0.2s; }
+        /* 歷史紀錄區 */
+        .history-section { margin-top: 30px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
+        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-top: 15px; }
+        .history-item { background: white; padding: 12px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .history-info { font-size: 0.85rem; }
+        .history-btns { display: flex; gap: 5px; }
+
+        button { border: none; border-radius: 10px; font-weight: bold; cursor: pointer; padding: 10px 16px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem; transition: 0.2s; }
         button:hover { opacity: 0.9; transform: translateY(-1px); }
-        
+        .btn-save { background: var(--success); color: white; }
         .btn-shuffle { background: var(--purple); color: white; }
         .btn-edit { background: var(--highlight); color: white; }
         .btn-edit.active { background: var(--primary); outline: 4px solid rgba(59, 130, 246, 0.2); }
-        
+        .btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: 6px; }
+
         select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); outline: none; background: white; }
-        
         #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
         #toast.show { opacity: 1; }
     </style>
@@ -44,19 +50,13 @@
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v5.0</span></h1>
+    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v6.0 (本地存檔版)</span></h1>
 
     <div class="header-box">
         <select id="subject">
             <option value="none">不顯示</option>
-            <option>早八</option>
-            <option>西班牙文</option>
-            <option>音樂</option>
-            <option>電腦</option>
-            <option>生物</option>
-            <option>現代文學</option>
-            <option>數學</option>
-            <option>藝術生活</option>
+            <option>早八</option><option>西班牙文</option><option>音樂</option><option>電腦</option>
+            <option>生物</option><option>現代文學</option><option>數學</option><option>藝術生活</option>
         </select>
         <div style="text-align:center;">出席: <b id="count-p" style="color:var(--success); font-size: 1.2rem;">0</b></div>
         <div style="text-align:center;">缺席: <b id="count-a" style="color:var(--danger); font-size: 1.2rem;">0</b></div>
@@ -66,9 +66,16 @@
     <div id="seating-grid" class="seating-chart"></div>
 
     <div class="footer-controls">
-        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定位置</button>
+        <button id="btn-change-mode" class="btn-edit" onclick="toggleChangeMode()">👤 手動鎖定</button>
         <button class="btn-shuffle" onclick="shuffleLogic()">🔀 重新排列</button>
-        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 恢復照片排列</button>
+        <button class="btn-save" onclick="saveToHistory()">💾 儲存今日紀錄</button>
+        <button onclick="resetData()" style="background:#f1f5f9; color:var(--primary); border: 1px solid var(--border);">🧹 恢復初始排列</button>
+    </div>
+
+    <div class="history-section">
+        <h3 style="margin:0; color: var(--primary); display: flex; align-items: center; gap: 8px;">📂 歷史紀錄 (儲存在此瀏覽器)</h3>
+        <div id="history-list" class="history-list">
+            </div>
     </div>
 </div>
 
@@ -80,7 +87,7 @@
         {pos:"1-6", id:"1114300155", ch:"朱雯芳"}, {pos:"2-6", id:"1114300169", ch:"遊梁健雅"}, {pos:"3-6", id:"1114300124", ch:"林沁榆"}, {pos:"4-6", id:"1114300130", ch:"陳祉恩"}, {pos:"5-6", id:"1114300175", ch:"陳宥卉"}, {pos:"6-6", id:"1114300164", ch:"王以倫"}, {pos:"7-6", id:"1114300163", ch:"曲孝寬"}, {pos:"8-6", id:"1114300138", ch:"羅凱爾"},
         {pos:"1-5", id:"1114300171", ch:"張湘翊"}, {pos:"2-5", id:"1114300160", ch:"陳漢庭"}, {pos:"3-5", id:"1114300159", ch:"陳冠宇"}, {pos:"4-5", id:"1114300123", ch:"陳湘甯"}, {pos:"5-5", id:"1114300131", ch:"陳又瑄"}, {pos:"6-5", id:"1114300170", ch:"張子瑜"}, {pos:"7-5", id:"1114300121", ch:"龔昱瑄"}, {pos:"8-5", id:"1114300151", ch:"張雅玟"},
         {pos:"1-4", id:"1114300153", ch:"陳以婕"}, {pos:"2-4", id:"1114300167", ch:"柯品瑀"}, {pos:"3-4", id:"1114300158", ch:"陳琦涵"}, {pos:"4-4", id:"1114300147", ch:"李恩妮"}, {pos:"5-4", id:"1114300129", ch:"陳靜宜"}, {pos:"6-4", id:"1114300148", ch:"林金姵"}, {pos:"7-4", id:"1114300127", ch:"陳乙瑄"}, {pos:"8-4", id:"1114300143", ch:"許唯芯"},
-        {pos:"1-3", id:"1114300161", ch:"張乙芹"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇"}, {pos:"4-3", id:"1114300139", ch:"辛俊文"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜"}, {pos:"8-3", id:"1114300172", ch:"廖鍵薇"},
+        {pos:"1-3", id:"1114300161", ch:"張乙芹"}, {pos:"2-3", id:"1114300133", ch:"陳玟慈"}, {pos:"3-3", id:"1114300132", ch:"賴宥璇"}, {pos:"4-3", id:"1114300139", ch:"辛俊文"}, {pos:"5-3", id:"1114300140", ch:"黃靖晏"}, {pos:"6-3", id:"1114300157", ch:"楊芷芹"}, {pos:"7-3", id:"1114300142", ch:"吳霈瑜"}, {pos:"8-3", id:"1114300172", ch:"紀錄薇"},
         {pos:"1-2", id:"1114300128", ch:"王溱妤"}, {pos:"2-2", id:"1114300134", ch:"江芯語"}, {pos:"3-2", id:"1114300502", ch:"鄭皓軒"}, {pos:"4-2", id:"1114300156", ch:"連子甯"}, {pos:"5-2", id:"1114300126", ch:"林奕帆"}, {pos:"6-2", id:"1114300152", ch:"牛昱翔"}, {pos:"7-2", id:"1114300135", ch:"陳世豪"}, {pos:"8-2", id:"1114300166", ch:"林宜樺"},
         {pos:"1-1", id:"1114300162", ch:"王妍菻"}, {pos:"2-1", id:"1114300168", ch:"卓彥均"}, {pos:"3-1", id:"1114300144", ch:"遊芯語"}, {pos:"4-1", id:"1114300149", ch:"陳可紜"}, {pos:"5-1", id:"1114300136", ch:"曾安岑"}, {pos:"6-1", id:"1114300145", ch:"李易昌"}, {pos:"7-1", id:"1114300122", ch:"余沛容"}, {pos:"8-1", id:"empty", ch:"(空位)"}
     ];
@@ -88,6 +95,7 @@
     let attendance = JSON.parse(localStorage.getItem('xe60c_att')) || {};
     let currentLayout = JSON.parse(localStorage.getItem('xe60c_layout')) || [...rawData];
     let manualFixedIds = JSON.parse(localStorage.getItem('xe60c_fixed')) || [];
+    let historyRecords = JSON.parse(localStorage.getItem('xe60c_history')) || [];
     let isChangingMode = false;
 
     function showToast(msg) {
@@ -95,7 +103,7 @@
         setTimeout(() => t.classList.remove('show'), 2000);
     }
 
-    function init() { renderGrid(); updateUI(); }
+    function init() { renderGrid(); renderHistory(); updateUI(); }
 
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
@@ -126,6 +134,7 @@
         });
     }
 
+    // --- 核心邏輯：重新排列 (磁鐵功能) ---
     function shuffleLogic() {
         const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
         const pairA = ["1114300124", "1114300136"];
@@ -134,16 +143,14 @@
         let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id));
         let freeIndices = [];
         currentLayout.forEach((s, i) => { if(s.id !== 'empty' && !manualFixedIds.includes(s.id)) freeIndices.push(i); });
-
         let finalMap = new Array(currentLayout.length).fill(null);
         manualFixedIds.forEach(id => {
             const idx = currentLayout.findIndex(s => s.id === id);
             finalMap[idx] = currentLayout.find(s => s.id === id);
         });
-
         const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
 
-        // 磁鐵群組邏輯 (保留並內部隨機)
+        // 磁鐵群組邏輯
         const fPool = pool.filter(s => groupFour.includes(s.id));
         if (fPool.length === 4) {
             let blocks = [];
@@ -162,14 +169,11 @@
                 });
             }
         }
-
         [pairA, pairB].forEach(pIds => {
             const pPool = pool.filter(s => pIds.includes(s.id));
             if (pPool.length === 2) {
                 let pairs = [];
-                for (let i of freeIndices) {
-                    if (i % 2 === 0 && freeIndices.includes(i + 1)) pairs.push([i, i + 1]);
-                }
+                for (let i of freeIndices) { if (i % 2 === 0 && freeIndices.includes(i + 1)) pairs.push([i, i + 1]); }
                 if (pairs.length > 0) {
                     const p = pairs[Math.floor(Math.random() * pairs.length)];
                     shuffleArr(pPool).forEach((s, i) => {
@@ -180,16 +184,73 @@
                 }
             }
         });
-
         shuffleArr(pool);
         freeIndices.forEach((idx, i) => { finalMap[idx] = pool[i]; });
-
         currentLayout = currentLayout.map((s, i) => {
             if (s.id === 'empty') return s;
             return { ...finalMap[i], pos: s.pos };
         });
-
         save(); renderGrid(); showToast("重新排列完成！");
+    }
+
+    // --- 歷史紀錄功能 ---
+    function saveToHistory() {
+        const now = new Date();
+        const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
+        const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
+        const recordName = `${dateStr} (${sub === '不顯示' ? '一般' : sub})`;
+        
+        const newRecord = {
+            id: Date.now(),
+            name: recordName,
+            layout: JSON.parse(JSON.stringify(currentLayout)),
+            attendance: JSON.parse(JSON.stringify(attendance)),
+            subjectIdx: document.getElementById('subject').selectedIndex
+        };
+        
+        historyRecords.unshift(newRecord); // 新的排在前面
+        if(historyRecords.length > 20) historyRecords.pop(); // 最多存20筆
+        localStorage.setItem('xe60c_history', JSON.stringify(historyRecords));
+        renderHistory();
+        showToast("已存檔至歷史紀錄");
+    }
+
+    function renderHistory() {
+        const container = document.getElementById('history-list');
+        container.innerHTML = historyRecords.length === 0 ? '<p style="color:#94a3b8; font-size:0.9rem;">尚無存檔紀錄</p>' : '';
+        historyRecords.forEach(rec => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <div class="history-info">
+                    <strong>${rec.name}</strong>
+                </div>
+                <div class="history-btns">
+                    <button class="btn-sm" style="background:var(--highlight); color:white;" onclick="loadHistory(${rec.id})">查看</button>
+                    <button class="btn-sm" style="background:#cbd5e1; color:var(--primary);" onclick="deleteHistory(${rec.id})">刪除</button>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function loadHistory(id) {
+        const rec = historyRecords.find(r => r.id === id);
+        if(rec) {
+            currentLayout = JSON.parse(JSON.stringify(rec.layout));
+            attendance = JSON.parse(JSON.stringify(rec.attendance));
+            document.getElementById('subject').selectedIndex = rec.subjectIdx;
+            save(); renderGrid(); updateUI();
+            showToast(`已載入紀錄: ${rec.name}`);
+        }
+    }
+
+    function deleteHistory(id) {
+        if(confirm("確定要刪除這筆紀錄嗎？")) {
+            historyRecords = historyRecords.filter(r => r.id !== id);
+            localStorage.setItem('xe60c_history', JSON.stringify(historyRecords));
+            renderHistory();
+        }
     }
 
     function save() {
@@ -205,7 +266,7 @@
     function resetData() {
         if(confirm("將座位恢復至照片的初始狀態？")) {
             currentLayout = [...rawData]; manualFixedIds = [];
-            save(); renderGrid(); showToast("已恢復初始排列");
+            save(); renderGrid(); showToast("已還原初始排列");
         }
     }
     function exportResult() {
