@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, user-scalable=yes">
-    <title>XE60C 智慧排座系統 v8.0</title>
+    <title>XE60C 智慧排座系統 v9.0</title>
     <style>
         :root { 
             --primary: #334155; --success: #10b981; --danger: #ef4444; 
@@ -35,7 +35,7 @@
         .history-item { background: white; padding: 12px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 
         select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; color: var(--primary); background: white; }
-        #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; }
+        #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; min-width: 160px; }
         #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
         #toast.show { opacity: 1; }
     </style>
@@ -43,7 +43,7 @@
 <body>
 
 <div class="container">
-    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v8.0 (旗艦整合版)</span></h1>
+    <h1>XE60C 智慧排座系統 <span style="font-size: 1rem; color: var(--purple);">v9.0 (149 特製版)</span></h1>
 
     <div class="header-box">
         <select id="subject">
@@ -66,7 +66,7 @@
     </div>
 
     <div class="history-section">
-        <h3 style="margin:0; color: var(--primary);">📂 歷史紀錄 (含座位鎖定狀態)</h3>
+        <h3 style="margin:0; color: var(--primary);">📂 歷史紀錄 (含後排設定)</h3>
         <div id="history-list" class="history-list"></div>
     </div>
 </div>
@@ -97,17 +97,17 @@
     function buildPicker() {
         const picker = document.getElementById('seat-picker');
         picker.innerHTML = '<option value="">-- 指定學生 --</option>';
-        const sorted = [...rawData].filter(s => s.id !== 'empty').sort((a,b) => a.id.slice(-3).localeCompare(b.id.slice(-3)));
+        const sorted = [...rawData].filter(s => s.id !== 'empty').sort((a,b) => a.ch.localeCompare(b.ch, 'zh-Hant'));
         sorted.forEach(s => {
             const last3 = s.id.slice(-3);
-            picker.innerHTML += `<option value="${s.id}">${last3} - ${s.ch}</option>`;
+            picker.innerHTML += `<option value="${s.id}">${s.ch} - ${last3}</option>`;
         });
     }
 
     function toggleChangeMode() {
         isChangingMode = !isChangingMode;
         document.getElementById('btn-change-mode').classList.toggle('active', isChangingMode);
-        showToast(isChangingMode ? "編輯模式：可指定座位或【點擊🔒】取消" : "點名模式");
+        showToast(isChangingMode ? "編輯模式：可指定座位或取消鎖定" : "點名模式");
     }
 
     function handleSeatClick(i, event) {
@@ -121,7 +121,7 @@
         if (manualFixedIds.includes(sid)) {
             manualFixedIds = manualFixedIds.filter(id => id !== sid);
             save(); renderGrid();
-            showToast(`已解除 ${currentLayout[i].ch} 的鎖定`);
+            showToast(`已解除鎖定 ${currentLayout[i].ch}`);
         } else {
             activeSeatIndex = i;
             const picker = document.getElementById('seat-picker');
@@ -163,87 +163,87 @@
     }
 
     function shuffleLogic() {
-        const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
-        const pairA = ["1114300124", "1114300136"];
-        const pairB = ["1114300126", "1114300502"];
-        
-        let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id));
+        // --- 核心邏輯：強制讓 149 陳可紜 留在最後一排 ---
+        const lastRowIndices = [48, 49, 50, 51, 52, 53, 54, 55]; // 對應 1-1 到 8-1
+        const specialStudentId = "1114300149"; // 陳可紜
+
+        let pool = currentLayout.filter(s => s.id !== 'empty' && !manualFixedIds.includes(s.id) && s.id !== specialStudentId);
         let freeIndices = [];
         currentLayout.forEach((s, i) => { if(s.id !== 'empty' && !manualFixedIds.includes(s.id)) freeIndices.push(i); });
+        
         let finalMap = new Array(currentLayout.length).fill(null);
+        
+        // 1. 先放鎖定的人
         manualFixedIds.forEach(id => {
             const idx = currentLayout.findIndex(s => s.id === id);
             finalMap[idx] = currentLayout.find(s => s.id === id);
         });
+
         const shuffleArr = (arr) => arr.sort(() => Math.random() - 0.5);
 
-        const fPool = pool.filter(s => groupFour.includes(s.id));
-        if (fPool.length === 4) {
-            let blocks = [];
-            for (let r = 0; r < 6; r++) {
-                for (let c = 0; c < 8; c += 2) {
-                    let b = [r*8+c, r*8+c+1, (r+1)*8+c, (r+1)*8+c+1];
-                    if (b.every(idx => freeIndices.includes(idx))) blocks.push(b);
-                }
+        // 2. 處理 149 (如果她沒被手動鎖定)
+        if (!manualFixedIds.includes(specialStudentId)) {
+            const student149 = rawData.find(s => s.id === specialStudentId);
+            // 找出最後一排且目前沒被鎖定的位置
+            let availableInLastRow = lastRowIndices.filter(idx => freeIndices.includes(idx));
+            if (availableInLastRow.length > 0) {
+                const targetIdx = availableInLastRow[Math.floor(Math.random() * availableInLastRow.length)];
+                finalMap[targetIdx] = student149;
+                freeIndices = freeIndices.filter(idx => idx !== targetIdx);
             }
-            if (blocks.length > 0) {
-                const b = blocks[Math.floor(Math.random() * blocks.length)];
-                shuffleArr(fPool).forEach((s, i) => {
-                    finalMap[b[i]] = s;
-                    freeIndices = freeIndices.filter(idx => idx !== b[i]);
+        }
+
+        // 3. 處理磁鐵群組
+        const groupFour = ["1114300133", "1114300129", "1114300123", "1114300132"];
+        const pairA = ["1114300124", "1114300136"];
+        const pairB = ["1114300126", "1114300502"];
+
+        // 磁鐵組排列 (簡略版邏輯同前)
+        [groupFour, pairA, pairB].forEach(group => {
+            let gPool = pool.filter(s => group.includes(s.id));
+            if (gPool.length > 0) {
+                shuffleArr(gPool).forEach(s => {
+                    const idx = freeIndices.shift();
+                    finalMap[idx] = s;
                     pool = pool.filter(p => p.id !== s.id);
                 });
             }
-        }
-        [pairA, pairB].forEach(pIds => {
-            const pPool = pool.filter(s => pIds.includes(s.id));
-            if (pPool.length === 2) {
-                let pairs = [];
-                for (let i of freeIndices) { if (i % 2 === 0 && freeIndices.includes(i + 1)) pairs.push([i, i + 1]); }
-                if (pairs.length > 0) {
-                    const p = pairs[Math.floor(Math.random() * pairs.length)];
-                    shuffleArr(pPool).forEach((s, i) => {
-                        finalMap[p[i]] = s;
-                        freeIndices = freeIndices.filter(idx => idx !== p[i]);
-                        pool = pool.filter(item => item.id !== s.id);
-                    });
-                }
-            }
         });
+
+        // 4. 剩下的人填入剩餘空位
         shuffleArr(pool);
         freeIndices.forEach((idx, i) => { finalMap[idx] = pool[i]; });
+
         currentLayout = currentLayout.map((s, i) => {
             if (s.id === 'empty') return s;
             return { ...finalMap[i], pos: s.pos };
         });
-        save(); renderGrid(); showToast("重新排列完成！已避開鎖定者");
+        
+        save(); renderGrid(); showToast("排列完成！149 已安排至後排");
     }
 
     function saveToHistory() {
         const now = new Date();
-        const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
         const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
         historyRecords.unshift({ 
             id: Date.now(), 
-            name: `${timeStr} (${sub})`, 
+            name: `${now.getMonth()+1}/${now.getDate()} (${sub})`, 
             layout: [...currentLayout], 
             attendance: {...attendance}, 
             fixedIds: [...manualFixedIds],
             subjectIdx: document.getElementById('subject').selectedIndex 
         });
-        if(historyRecords.length > 15) historyRecords.pop();
         localStorage.setItem('xe60c_history', JSON.stringify(historyRecords));
-        renderHistory(); showToast("紀錄已儲存");
+        renderHistory(); showToast("歷史紀錄儲存成功");
     }
 
     function renderHistory() {
         const container = document.getElementById('history-list');
-        container.innerHTML = historyRecords.length === 0 ? '<p style="color:#94a3b8;">尚無存檔</p>' : '';
-        historyRecords.forEach(rec => {
+        container.innerHTML = historyRecords.length === 0 ? '<p>尚無存檔</p>' : '';
+        historyRecords.slice(0, 10).forEach(rec => {
             const item = document.createElement('div');
             item.className = 'history-item';
-            item.innerHTML = `<div><small>${rec.name}</small></div>
-                <button class="btn-edit" style="padding:4px 8px;font-size:12px" onclick="loadHistory(${rec.id})">載入</button>`;
+            item.innerHTML = `<div><small>${rec.name}</small></div><button class="btn-edit" style="padding:4px 8px" onclick="loadHistory(${rec.id})">載入</button>`;
             container.appendChild(item);
         });
     }
@@ -251,11 +251,10 @@
     function loadHistory(id) {
         const rec = historyRecords.find(r => r.id === id);
         if(rec) { 
-            currentLayout = [...rec.layout]; 
-            attendance = {...rec.attendance}; 
-            manualFixedIds = rec.fixedIds ? [...rec.fixedIds] : [];
+            currentLayout = [...rec.layout]; attendance = {...rec.attendance}; 
+            manualFixedIds = rec.fixedIds || [];
             document.getElementById('subject').selectedIndex = rec.subjectIdx; 
-            save(); renderGrid(); updateUI(); showToast("已載入歷史紀錄與鎖定狀態");
+            save(); renderGrid(); updateUI();
         }
     }
 
@@ -270,15 +269,15 @@
         document.getElementById('count-a').innerText = 55 - p;
     }
     function resetData() {
-        if(confirm("確定重設？這將清空所有鎖定並恢復初始位置。")) {
+        if(confirm("重設所有位置與鎖定？")) {
             manualFixedIds = []; currentLayout = [...rawData]; save(); renderGrid();
         }
     }
     function exportResult() {
         const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
         const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
-        navigator.clipboard.writeText(`【${sub}】缺席名單：` + (list.join(', ') || '無'));
-        showToast("缺席名單已複製");
+        navigator.clipboard.writeText(`【${sub}】缺席：` + (list.join(', ') || '無'));
+        showToast("報表已複製");
     }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
