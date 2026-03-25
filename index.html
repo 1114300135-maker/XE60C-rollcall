@@ -185,8 +185,12 @@
         .btn-edit { background: rgba(10, 132, 255, 0.9); color: white; border: none; }
         .btn-edit.active { background: #0056b3; box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.3); }
 
+        /* 刪除按鈕特別樣式 */
+        .btn-delete { background: rgba(255, 69, 58, 0.15); color: #FF453A; border: 1px solid rgba(255, 69, 58, 0.3); }
+        .btn-delete:hover { background: rgba(255, 69, 58, 0.8); color: white; }
+
         .history-section { margin-top: 40px; padding: 0 10px; }
-        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+        .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
         .history-item { 
             background: rgba(255, 255, 255, 0.5); 
             backdrop-filter: blur(15px);
@@ -198,6 +202,10 @@
             align-items: center; 
             font-weight: 500;
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .history-item-actions {
+            display: flex;
+            gap: 8px;
         }
 
         #seat-picker { position: absolute; opacity: 0; pointer-events: none; z-index: 2000; box-shadow: 0 15px 40px rgba(0,0,0,0.2); border-radius: 16px; border: none; padding: 10px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
@@ -448,8 +456,13 @@
         historyRecords.forEach(rec => {
             const item = document.createElement('div');
             item.className = 'history-item';
-            item.innerHTML = `<div><small style="color:var(--text-secondary);">${rec.name}</small></div>
-                <button class="btn-edit" style="padding:6px 14px; font-size:12px; border-radius: 14px;" onclick="loadHistory(${rec.id})">載入</button>`;
+            // 加入了右側包含「載入」與「刪除」的按鈕群組
+            item.innerHTML = `
+                <div><small style="color:var(--text-secondary);">${rec.name}</small></div>
+                <div class="history-item-actions">
+                    <button class="btn-edit" style="padding:6px 14px; font-size:12px; border-radius: 14px;" onclick="loadHistory(${rec.id})">載入</button>
+                    <button class="btn-delete" style="padding:6px 14px; font-size:12px; border-radius: 14px;" onclick="deleteHistory(${rec.id})">刪除</button>
+                </div>`;
             container.appendChild(item);
         });
     }
@@ -465,21 +478,34 @@
         }
     }
 
+    // 新增：刪除歷史紀錄的功能
+    function deleteHistory(id) {
+        if(confirm("確定要刪除這筆歷史紀錄嗎？")) {
+            historyRecords = historyRecords.filter(r => r.id !== id);
+            localStorage.setItem('xe60c_history', JSON.stringify(historyRecords));
+            renderHistory(); 
+            showToast("紀錄已刪除");
+        }
+    }
+
     function save() {
         localStorage.setItem('xe60c_att', JSON.stringify(attendance));
         localStorage.setItem('xe60c_layout', JSON.stringify(currentLayout));
         localStorage.setItem('xe60c_fixed', JSON.stringify(manualFixedIds));
     }
+    
     function updateUI() {
         const p = Object.values(attendance).filter(v => v !== false).length;
         document.getElementById('count-p').innerText = p;
         document.getElementById('count-a').innerText = 55 - p;
     }
+
     function resetData() {
         if(confirm("確定重設？這將清空所有鎖定並恢復初始位置。")) {
             manualFixedIds = []; currentLayout = [...rawData]; save(); renderGrid(); showToast("已還原初始狀態");
         }
     }
+
     function exportResult() {
         const sub = document.getElementById('subject').options[document.getElementById('subject').selectedIndex].text;
         const list = currentLayout.filter(s => s.id !== 'empty' && attendance[s.id] === false).map(s => s.ch);
